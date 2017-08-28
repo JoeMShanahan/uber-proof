@@ -1,0 +1,22 @@
+Configuring protolude-0.1.10...
+Building protolude-0.1.10...
+Preprocessing library protolude-0.1.10...
+[ 1 of 16] Compiling Semiring         ( src/Semiring.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Semiring.o )
+[ 2 of 16] Compiling List             ( src/List.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/List.o )
+[ 3 of 16] Compiling Functor          ( src/Functor.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Functor.o )
+[ 4 of 16] Compiling Either           ( src/Either.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Either.o )
+[ 5 of 16] Compiling Bool             ( src/Bool.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Bool.o )
+[ 6 of 16] Compiling Bifunctor        ( src/Bifunctor.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Bifunctor.o )
+[ 7 of 16] Compiling Base             ( src/Base.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Base.o )
+[ 8 of 16] Compiling Conv             ( src/Conv.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Conv.o )
+[ 9 of 16] Compiling Exceptions       ( src/Exceptions.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Exceptions.o )
+[10 of 16] Compiling Monad            ( src/Monad.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Monad.o )
+[11 of 16] Compiling Panic            ( src/Panic.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Panic.o )
+[12 of 16] Compiling Show             ( src/Show.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Show.o )
+[13 of 16] Compiling Debug            ( src/Debug.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Debug.o )
+[14 of 16] Compiling Unsafe           ( src/Unsafe.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Unsafe.o )
+[15 of 16] Compiling Applicative      ( src/Applicative.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Applicative.o )
+[16 of 16] Compiling Protolude        ( src/Protolude.hs, .stack-work/dist/x86_64-linux/Cabal-1.24.2.0/build/Protolude.o )
+Installing library in
+/home/joeshanahan/.stack/snapshots/x86_64-linux/lts-9.2/8.0.2/lib/x86_64-linux-ghc-8.0.2/protolude-0.1.10-EbWghKT4Ra36YSCOzDFDKT
+Registering protolude-0.1.10...

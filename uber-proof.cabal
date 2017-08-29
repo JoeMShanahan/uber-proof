@@ -1,0 +1,55 @@
+name:                uber-proof
+version:             0.1.0.0
+homepage:            https://github.com/joemshanahan/uber-proof#readme
+license:             BSD3
+license-file:        LICENSE
+author:              Author name here
+maintainer:          JoeMShanahan@github
+copyright:           2017 Joe Shanahan
+category:            Web
+build-type:          Simple
+extra-source-files:  README.md
+cabal-version:       >=1.10
+
+library
+  hs-source-dirs:      src
+  ghc-options:         -Wall
+  exposed-modules:     Expenses
+                       Reconciliation
+                       SeleniumProcess
+                       SeleniumScrape
+                       Types.Expenses
+                       Types.UberTrip
+                       Types.Reconciliation
+  build-depends:       base
+                     , process
+                     , protolude
+                     , optparse-applicative
+  default-language:    Haskell2010
+  default-extensions:  OverloadedStrings, NoImplicitPrelude
+
+executable uber-proof-exe
+  hs-source-dirs:      app
+  main-is:             Main.hs
+  ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N
+  other-modules:       Options
+  build-depends:       base
+                     , uber-proof
+                     , protolude
+  default-language:    Haskell2010
+  default-extensions:  OverloadedStrings, NoImplicitPrelude
+
+test-suite uber-proof-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Spec.hs
+  build-depends:       base
+                     , uber-proof
+                     , protolude
+  ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N
+  default-language:    Haskell2010
+  default-extensions:  OverloadedStrings, NoImplicitPrelude
+
+source-repository head
+  type:     git
+  location: https://github.com/joemshanahan/uber-proof

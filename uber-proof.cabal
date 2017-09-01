@@ -24,7 +24,6 @@ library
   build-depends:       base
                      , process
                      , protolude
-                     , optparse-applicative
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings, NoImplicitPrelude
 
@@ -35,6 +34,7 @@ executable uber-proof-exe
   other-modules:       Options
   build-depends:       base
                      , uber-proof
+                     , optparse-applicative
                      , protolude
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings, NoImplicitPrelude

@@ -1,6 +1,8 @@
 module Main where
 
 import Protolude
+import Options
 
 main :: IO ()
-main = error "Not yet implemented"
+main = withOptions $ \opt -> do
+  error "Not yet implemented"

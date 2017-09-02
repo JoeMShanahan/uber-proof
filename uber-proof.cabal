@@ -24,6 +24,7 @@ library
   build-depends:       base
                      , process
                      , protolude
+                     , webdriver
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings, NoImplicitPrelude
 
@@ -35,6 +36,7 @@ executable uber-proof-exe
   build-depends:       base
                      , uber-proof
                      , optparse-applicative
+                     , network-uri
                      , protolude
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings, NoImplicitPrelude

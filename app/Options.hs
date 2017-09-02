@@ -5,46 +5,42 @@ module Options
 
 import Protolude
 import Options.Applicative
+import Network.URI
+import System.Exit
+import Prelude             (String)
 
-data Options = Options
-  { optSeleniumServer :: FilePath
-  , optWebdriver      :: WebDriver
+newtype Options = Options
+  { optSeleniumServerHost :: URI
   }
 
-data WebDriver = Chrome FilePath
+newtype Args = Args
+  { argsSeleniumServerHost :: String
+  }
 
 withOptions :: (Options -> IO a) -> IO a
-withOptions go = getOptions >>= go
+withOptions go = do
+  args <- readArgs
+  case argsToOptions args of
+    Just opts -> go opts
+    Nothing   -> die "Could not make options from args"
 
-getOptions :: IO Options
-getOptions = execParser parseArgs
+readArgs :: IO Args
+readArgs = execParser parseArgs
 
-parseArgs :: ParserInfo Options
+argsToOptions :: Args -> Maybe Options
+argsToOptions args = Options <$> parseURI (argsSeleniumServerHost args)
+
+parseArgs :: ParserInfo Args
 parseArgs =
-  info (optionsParser <**> helper)
+  info (argsParser <**> helper)
     (  fullDesc
     <> progDesc "Project to document Uber trips, collect proof of a trip and compare known trips to known charges."
-    <> header "My header"
     )
   where
-  optionsParser = Options <$> getSelenium <*> getWebDriver
-  getKey = strOption
-    (  long "key"
-    <> short 'k'
-    <> metavar "KEY"
-    <> help "Your API key"
+  argsParser = Args <$> serverRaw
+  serverRaw = strOption
+    (  long "selenium-server-uri"
+    <> short 'u'
+    <> metavar "URI"
+    <> help "URI to the Selenium server used to drive the browser"
     )
-  getFilePath = strOption
-    (  long "key-file"
-    <> short 'f'
-    <> metavar "KEY_FILE"
-    <> help "Location of your key file (utf8 encoding)"
-    )
-  getVerbosity =
-    flag undefined undefined
-    (  long "verbose"
-    <> short 'v'
-    <> help "Enably verbose mode"
-    )
-  getSelenium = undefined
-  getWebDriver = undefined

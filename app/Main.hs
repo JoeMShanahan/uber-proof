@@ -1,8 +1,10 @@
 module Main where
 
-import Protolude
 import Options
+import Uberlude
+import Network.URI
+import SeleniumScrape
 
 main :: IO ()
 main = withOptions $ \opt -> do
-  putText "Done!"
+  void $ getTrips "" 0

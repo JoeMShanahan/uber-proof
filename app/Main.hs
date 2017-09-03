@@ -3,7 +3,7 @@ module Main where
 import Options
 import Uberlude
 import Network.URI
-import SeleniumScrape
+import UberScrape
 
 main :: IO ()
 main = withOptions $ \opt -> do

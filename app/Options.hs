@@ -3,11 +3,10 @@ module Options
   , withOptions
   ) where
 
-import Protolude
 import Options.Applicative
 import Network.URI
 import System.Exit
-import Prelude             (String)
+import Uberlude
 
 newtype Options = Options
   { optSeleniumServerHost :: URI

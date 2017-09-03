@@ -23,8 +23,10 @@ library
                        Types.Reconciliation
                        Uberlude
   build-depends:       base
+                     , friday
                      , process
                      , protolude
+                     , time
                      , webdriver
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings, NoImplicitPrelude
@@ -38,7 +40,6 @@ executable uber-proof-exe
                      , uber-proof
                      , optparse-applicative
                      , network-uri
-                     , protolude
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings, NoImplicitPrelude
 

@@ -9,12 +9,12 @@ import Uberlude
 
 data Options = Options
   { optSeleniumServerHost :: String
-  , optSeleniumServerPort :: Int
+  , optSeleniumServerPort :: Maybe Int
   }
 
 data Args = Args
   { argsSeleniumServerHost :: String
-  , argsSeleniumServerPort :: Int
+  , argsSeleniumServerPort :: Maybe Int
   }
 
 withOptions :: (Options -> IO a) -> IO a
@@ -44,7 +44,7 @@ parseArgs =
     <> metavar "HOST"
     <> help "Hostname of the Selenium server used to drive the browser"
     )
-  serverPort = option auto
+  serverPort = optional $ option auto
     (  long "selenium-server-port"
     <> short 'p'
     <> metavar "PORT"

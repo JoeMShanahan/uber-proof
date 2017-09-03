@@ -21,6 +21,7 @@ library
                        Types.Expenses
                        Types.UberTrip
                        Types.Reconciliation
+                       Uberlude
   build-depends:       base
                      , process
                      , protolude

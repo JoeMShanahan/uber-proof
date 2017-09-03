@@ -1,19 +1,20 @@
 module Options
-  ( Options
+  ( Options (..)
   , withOptions
   ) where
 
 import Options.Applicative
-import Network.URI
 import System.Exit
 import Uberlude
 
-newtype Options = Options
-  { optSeleniumServerHost :: URI
+data Options = Options
+  { optSeleniumServerHost :: String
+  , optSeleniumServerPort :: Int
   }
 
-newtype Args = Args
+data Args = Args
   { argsSeleniumServerHost :: String
+  , argsSeleniumServerPort :: Int
   }
 
 withOptions :: (Options -> IO a) -> IO a
@@ -27,7 +28,7 @@ readArgs :: IO Args
 readArgs = execParser parseArgs
 
 argsToOptions :: Args -> Maybe Options
-argsToOptions args = Options <$> parseURI (argsSeleniumServerHost args)
+argsToOptions args = Just $ Options (argsSeleniumServerHost args) (argsSeleniumServerPort args)
 
 parseArgs :: ParserInfo Args
 parseArgs =
@@ -36,10 +37,16 @@ parseArgs =
     <> progDesc "Project to document Uber trips, collect proof of a trip and compare known trips to known charges."
     )
   where
-  argsParser = Args <$> serverRaw
-  serverRaw = strOption
-    (  long "selenium-server-uri"
-    <> short 'u'
-    <> metavar "URI"
-    <> help "URI to the Selenium server used to drive the browser"
+  argsParser = Args <$> serverHost <*> serverPort
+  serverHost = strOption
+    (  long "selenium-server-host"
+    <> short 'h'
+    <> metavar "HOST"
+    <> help "Hostname of the Selenium server used to drive the browser"
+    )
+  serverPort = option auto
+    (  long "selenium-server-port"
+    <> short 'p'
+    <> metavar "PORT"
+    <> help "Port of the Selenium server used to drive the browser"
     )

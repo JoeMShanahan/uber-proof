@@ -16,8 +16,7 @@ library
   ghc-options:         -Wall
   exposed-modules:     Expenses
                        Reconciliation
-                       SeleniumProcess
-                       SeleniumScrape
+                       UberScrape
                        Types.Expenses
                        Types.UberTrip
                        Types.Reconciliation

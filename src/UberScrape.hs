@@ -23,7 +23,7 @@ chromeConfig host port = addPort $ config { wdHost = host }
 performUberLogin :: Username -> Password -> WD ()
 performUberLogin (Username user) (Password pwd) = do
   putText "Attempting login"
-  
+
   userInput <- findElem $ ById "useridInput"
   sendKeys user userInput
   findAndClickNext
@@ -81,4 +81,4 @@ data WDSuccess a = Success a | Failure
   deriving (Eq, Show)
 
 tryWD :: WD a -> WD (WDSuccess a)
-tryWD go = waitUntil 0 (go >>= return . Success) `onTimeout ` return Failure
+tryWD go = waitUntil 0 (go >>= return . Success) `onTimeout` return Failure

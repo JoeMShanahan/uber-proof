@@ -23,6 +23,8 @@ library
                        Uberlude
   build-depends:       base
                      , friday
+                     , HUnit
+                     , lifted-base
                      , process
                      , protolude
                      , text

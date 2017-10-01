@@ -55,19 +55,18 @@ parseArgs =
     )
   serverPort = optional $ option auto
     (  long "selenium-server-port"
-    <> short 'p'
     <> metavar "PORT"
     <> help "Port of the Selenium server used to drive the browser"
     )
-  username = option auto
+  username = strOption
     (  long "uber-username"
     <> short 'u'
     <> metavar "USERNAME"
     <> help "Username to log in to Uber with"
     )
-  password = option auto
+  password = strOption
     (  long "uber-password"
-    <> short 'u'
+    <> short 'p'
     <> metavar "PASSWORD"
     <> help "Password to log in to Uber with"
     )

@@ -4,4 +4,4 @@ module Uberlude
 
 import Protolude as Reexported
 import Prelude   as Reexported (String) 
-
+import Data.Text as Reexported (unpack, pack)

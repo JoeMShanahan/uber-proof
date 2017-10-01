@@ -18,13 +18,14 @@ library
                        Reconciliation
                        UberScrape
                        Types.Expenses
-                       Types.UberTrip
+                       Types.Uber
                        Types.Reconciliation
                        Uberlude
   build-depends:       base
                      , friday
                      , process
                      , protolude
+                     , text
                      , time
                      , webdriver
   default-language:    Haskell2010

@@ -23,20 +23,22 @@ chromeConfig host port = addPort $ config { wdHost = host }
 performUberLogin :: Username -> Password -> WD ()
 performUberLogin (Username user) (Password pwd) = do
   putText "Attempting login"
-
-  userInput <- findElem $ ById "useridInput"
-  sendKeys user userInput
-  findAndClickNext
-
-  passInput <- patiently $ findElem $ ById "password"
-  sendKeys pwd passInput
-  findAndClickNext
-
-  patiently loggedInOr2FA
-
-  putText "Login successful"
+  attempt <- tryWD loginProcedure
+  case attempt of
+    Success _ -> putText "Login successful"
+    Failure   -> fail "Login failed!"
 
   where
+  loginProcedure = do
+    enterInput user userInputId
+    enterInput pwd passwordInputId
+    patiently loggedInOr2FA
+
+  enterInput keys elemId = do
+    input <- findElem $ ById elemId
+    sendKeys keys input
+    findAndClickNext
+
   findAndClickNext = findAndClick "Next"
   findAndClick t = do
     es <- findElems (containsTextSelector t)
@@ -46,24 +48,22 @@ performUberLogin (Username user) (Password pwd) = do
       _     -> unexpected $ unpack $
         "Found " <> show (length es) <> " " <> t <> " buttons"
 
-  loggedInOr2FA = do
-    login <- tryWD loginSuccess
-    case login of
-      Success _ -> return ()
-      Failure   -> do
-        mfaInput <- findElem $ ById "verificationCode"
-        putText "It looks like Uber is wanting a 2FA code, please enter it:"
-        code <- liftIO getLine
-        sendKeys code mfaInput
-        findAndClick "Verify"
-        patiently loginSuccess
+  askFor2FA input t = do
+    putText $ fromMaybe "It looks like Uber is wanting a 2FA code, please enter it:" t
+    code <- liftIO getLine
+    clearInput input
+    sendKeys code input
+    findAndClick "Verify"
 
+  loggedInOr2FA = void $ tryEither loginSuccess process2FA
+
+  process2FA = do
+    mfaInput <- findElem $ ById mfaInputId
+    askFor2FA mfaInput Nothing
+    patiently loginSuccess
 
 loginSuccess :: WD ()
 loginSuccess = void $ findElem $ containsTextSelector "MY TRIPS"
-
-uberPage :: String
-uberPage = "https://riders.uber.com"
 
 containsTextSelector :: Text -> Selector
 containsTextSelector t = ByXPath $
@@ -82,3 +82,25 @@ data WDSuccess a = Success a | Failure
 
 tryWD :: WD a -> WD (WDSuccess a)
 tryWD go = waitUntil 0 (go >>= return . Success) `onTimeout` return Failure
+
+tryEither :: WD a -> WD b -> WD (Either a b)
+tryEither getA getB = do
+  a <- tryWD getA
+  case a of
+    Success s -> return $ Left s
+    Failure   -> Right <$> getB
+
+uberPage :: String
+uberPage = "https://riders.uber.com"
+
+captchaSuccessClass :: Text
+captchaSuccessClass = "recaptcha-checkbox-checkmark"
+
+userInputId :: Text
+userInputId = "useridInput"
+
+passwordInputId :: Text
+passwordInputId = "password"
+
+mfaInputId :: Text
+mfaInputId = "verificationCode"

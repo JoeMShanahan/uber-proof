@@ -2,11 +2,12 @@ module UberScrape
   ( getTrips
   ) where
 
-import Uberlude
+import Uberlude hiding (withAsync)
 import Types.Uber
 import Test.WebDriver
 import Test.WebDriver.Commands.Wait (waitUntil, onTimeout, unexpected)
-import Data.Text (toLower)
+import Data.Text (toLower, isInfixOf)
+import Control.Concurrent.Async.Lifted
 
 getTrips :: String -> Maybe Int -> Username -> Password -> IO [UberTrip]
 getTrips host port user pwd = runSession (chromeConfig host port) $ do
@@ -23,23 +24,24 @@ chromeConfig host port = addPort $ config { wdHost = host }
 performUberLogin :: Username -> Password -> WD ()
 performUberLogin (Username user) (Password pwd) = do
   putText "Attempting login"
-  attempt <- tryWD loginProcedure
+  attempt <- tryWD $ loginProcedure `tryUntil` loginSuccess
   case attempt of
     Success _ -> putText "Login successful"
-    Failure   -> fail "Login failed!"
+    Failure   -> unexpected "Login failed!"
 
   where
   loginProcedure = do
-    patiently $ enterInput user userInputId
-    patiently $ enterInput pwd passwordInputId
-    patiently loggedInOr2FA
+    patiently $ enterInput user userInputId "Next"
+    patiently $ enterInput pwd passwordInputId "Next"
+    patiently process2FA
+    putText ""
 
-  enterInput keys elemId = do
+  enterInput keys elemId buttonText = do
     input <- findElem $ ById elemId
+    clearInput input
     sendKeys keys input
-    findAndClickNext
+    findAndClick buttonText
 
-  findAndClickNext = findAndClick "Next"
   findAndClick t = do
     es <- findElems (containsTextSelector t)
     next <- filterM isDisplayed es
@@ -48,28 +50,27 @@ performUberLogin (Username user) (Password pwd) = do
       _     -> unexpected $ unpack $
         "Found " <> show (length es) <> " " <> t <> " buttons"
 
-  askFor2FA input t = do
-    putText $ fromMaybe "It looks like Uber is wanting a 2FA code, please enter it:" t
+  askFor2FA = do    
     code <- liftIO getLine
-    clearInput input
-    sendKeys code input
-    findAndClick "Verify"
+    enterInput code mfaInputId "Verify"
 
-  loggedInOr2FA = void $ tryEither loginSuccess process2FA
+  wrong2fa = void $ findElem $ containsTextSelector $
+    "Verification code is incorrect"
 
   process2FA = do
-    mfaInput <- findElem $ ById mfaInputId
-    askFor2FA mfaInput Nothing
-    patiently loginSuccess
+    putText "It looks like Uber is wanting a 2FA code, please enter it:"
+    askFor2FA
+    void $ patiently wrong2fa
+    process2FA
 
 loginSuccess :: WD ()
 loginSuccess = void $ findElem $ containsTextSelector "MY TRIPS"
 
 containsTextSelector :: Text -> Selector
 containsTextSelector t = ByXPath $
-     "//*[text()[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'),'"
+     "//*[text()[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'),\""
   <> toLower t
-  <> "')]]"
+  <> "\")]]"
 
 patiently :: WD a -> WD a
 patiently = waitUntil waitTime
@@ -104,3 +105,11 @@ passwordInputId = "password"
 
 mfaInputId :: Text
 mfaInputId = "verificationCode"
+
+tryUntil :: WD a -> WD a -> WD a
+tryUntil attempt until = withAsync attempt $ const untilLoop
+  where
+  untilLoop = go =<< tryWD until
+  go result = case result of 
+    Success a -> return a
+    Failure   -> untilLoop

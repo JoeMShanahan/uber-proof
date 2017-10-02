@@ -22,9 +22,10 @@ library
                        Types.Reconciliation
                        Uberlude
   build-depends:       base
+                     , lifted-base
                      , friday
                      , HUnit
-                     , lifted-base
+                     , lifted-async
                      , process
                      , protolude
                      , text

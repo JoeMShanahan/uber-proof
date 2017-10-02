@@ -4,5 +4,6 @@ packages:
 extra-deps:
 - friday-0.2.3.1
 - ratio-int-0.1.2
+- concurrent-state-0.6.0.0
 flags: {}
 extra-package-dbs: []

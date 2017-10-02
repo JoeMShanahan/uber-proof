@@ -13,7 +13,8 @@ newtype Username = Username Text
 newtype Password = Password Text
 
 data UberTrip = UberTrip
-  { uberScreenshot :: ByteString
+  { uberTripId     :: Text       -- ^ This is a v4 UUID
+  , uberScreenshot :: ByteString -- ^ PNG encoded
   , uberStartTime  :: UTCTime
   , uberStartLoc   :: Text
   , uberEndLoc     :: Text

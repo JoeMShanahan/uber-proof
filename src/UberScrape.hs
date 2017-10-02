@@ -30,8 +30,8 @@ performUberLogin (Username user) (Password pwd) = do
 
   where
   loginProcedure = do
-    enterInput user userInputId
-    enterInput pwd passwordInputId
+    patiently $ enterInput user userInputId
+    patiently $ enterInput pwd passwordInputId
     patiently loggedInOr2FA
 
   enterInput keys elemId = do

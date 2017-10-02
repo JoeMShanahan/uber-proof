@@ -24,7 +24,7 @@ chromeConfig host port = addPort $ config { wdHost = host }
 performUberLogin :: Username -> Password -> WD ()
 performUberLogin (Username user) (Password pwd) = do
   putText "Attempting login"
-  attempt <- tryWD $ loginProcedure `tryUntil` loginSuccess
+  attempt <- tryWD loginProcedure
   case attempt of
     Success _ -> putText "Login successful"
     Failure   -> unexpected "Login failed!"
@@ -33,8 +33,10 @@ performUberLogin (Username user) (Password pwd) = do
   loginProcedure = do
     patiently $ enterInput user userInputId "Next"
     patiently $ enterInput pwd passwordInputId "Next"
-    patiently process2FA
-    putText ""
+    let badPwd = findElem $ containsTextSelector "entered is incorrect"
+    patiently (tryEither badPwd loginSuccess) >>= \r -> case r of
+      Left _  -> fail "Bad password"
+      Right _ -> return ()
 
   enterInput keys elemId buttonText = do
     input <- findElem $ ById elemId
@@ -50,27 +52,14 @@ performUberLogin (Username user) (Password pwd) = do
       _     -> unexpected $ unpack $
         "Found " <> show (length es) <> " " <> t <> " buttons"
 
-  askFor2FA = do    
-    code <- liftIO getLine
-    enterInput code mfaInputId "Verify"
-
-  wrong2fa = void $ findElem $ containsTextSelector $
-    "Verification code is incorrect"
-
-  process2FA = do
-    putText "It looks like Uber is wanting a 2FA code, please enter it:"
-    askFor2FA
-    void $ patiently wrong2fa
-    process2FA
-
 loginSuccess :: WD ()
 loginSuccess = void $ findElem $ containsTextSelector "MY TRIPS"
 
 containsTextSelector :: Text -> Selector
 containsTextSelector t = ByXPath $
-     "//*[text()[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'),\""
+     "//*[text()[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'),'"
   <> toLower t
-  <> "\")]]"
+  <> "')]]"
 
 patiently :: WD a -> WD a
 patiently = waitUntil waitTime

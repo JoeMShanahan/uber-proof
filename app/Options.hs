@@ -58,7 +58,7 @@ argsToOptions args = do
   start <- maybe' NoParseStart $ argsStart args
   end   <- maybe' NoParseEnd   $ argsEnd   args
 
-  when (start < end) $ Left EndBeforeStart
+  when (start > end) $ Left EndBeforeStart
 
   return $ Options
     { optSeleniumServerHost = argsSeleniumServerHost args

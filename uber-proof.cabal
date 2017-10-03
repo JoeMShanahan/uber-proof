@@ -30,6 +30,7 @@ library
                      , protolude
                      , text
                      , time
+                     , unordered-containers
                      , webdriver
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings, NoImplicitPrelude
@@ -51,8 +52,10 @@ test-suite uber-proof-test
   hs-source-dirs:      test
   main-is:             Spec.hs
   build-depends:       base
-                     , uber-proof
+                     , hspec
                      , protolude
+                     , uber-proof
+                     , time
   ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings, NoImplicitPrelude

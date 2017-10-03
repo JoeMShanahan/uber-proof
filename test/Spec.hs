@@ -3,6 +3,7 @@ import Test.Hspec
 import Types.Uber
 import UberScrape
 import Data.Time
+import Options
 
 main :: IO ()
 main = hspec $ do
@@ -30,3 +31,11 @@ main = hspec $ do
     it "Backwards range returns nothing" $ do
       let d = fromGregorian 2017 01 01
       yearAndMonths d (pred d) `shouldMatchList` []
+
+  describe "Parse a day" $ do
+    let expectedDay = fromGregorian 2017 01 01
+        cases = [ "01/01/17"
+                , "2017-01-01"
+                ]
+
+    forM_ cases $ \d -> it ("Parses " <> d) $ parseDay d `shouldBe` Just expectedDay

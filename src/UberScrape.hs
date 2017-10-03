@@ -14,12 +14,19 @@ import Test.WebDriver.Commands.Wait (waitUntil, onTimeout, unexpected)
 import Data.Text (toLower, isInfixOf)
 import Control.Concurrent.Async.Lifted
 
-getTrips :: String -> Maybe Int -> Username -> Password -> IO [UberTrip]
-getTrips host port user pwd = runSession (chromeConfig host port) $ do
+getTrips :: Day -> Day -> String -> Maybe Int -> Username -> Password -> IO [UberTrip]
+getTrips start end host port user pwd = runSession (chromeConfig host port) $ do
   openPage uberPage
   performUberLogin user pwd
-  openPage $ filterTripsURL (Year 2017) (Month 09)
-  return []
+  let months = yearAndMonths start end
+      trips (y, m) = tripsInMonth y m
+  concat <$> mapM trips months
+
+tripsInMonth :: Year -> Month -> WD [UberTrip]
+tripsInMonth y m = do
+  openPage $ filterTripsURL y m
+  liftIO $ threadDelay 10000000000000
+  undefined
 
 chromeConfig :: String -> Maybe Int -> WDConfig
 chromeConfig host port = addPort $ config { wdHost = host }

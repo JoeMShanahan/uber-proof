@@ -3,6 +3,9 @@ module Types.Uber
 
   , Username (..)
   , Password (..)
+
+  , Month (..)
+  , Year (..)
   ) where
 
 import Data.Time
@@ -11,6 +14,9 @@ import Uberlude
 
 newtype Username = Username Text
 newtype Password = Password Text
+
+newtype Month = Month Int     deriving (Eq, Show)
+newtype Year  = Year  Integer deriving (Eq, Show)
 
 data UberTrip = UberTrip
   { uberTripId     :: Text       -- ^ This is a v4 UUID

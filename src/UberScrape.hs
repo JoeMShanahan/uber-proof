@@ -1,7 +1,12 @@
 module UberScrape
   ( getTrips
+
+  -- * For tests
+  , yearAndMonths
   ) where
 
+import qualified Data.HashSet as HS
+import           Data.Time
 import Uberlude hiding (withAsync)
 import Types.Uber
 import Test.WebDriver
@@ -13,6 +18,7 @@ getTrips :: String -> Maybe Int -> Username -> Password -> IO [UberTrip]
 getTrips host port user pwd = runSession (chromeConfig host port) $ do
   openPage uberPage
   performUberLogin user pwd
+  openPage $ filterTripsURL (Year 2017) (Month 09)
   return []
 
 chromeConfig :: String -> Maybe Int -> WDConfig
@@ -33,7 +39,9 @@ performUberLogin (Username user) (Password pwd) = do
   loginProcedure = do
     patiently $ enterInput user userInputId "Next"
     patiently $ enterInput pwd passwordInputId "Next"
-    let badPwd = findElem $ containsTextSelector "entered is incorrect"
+    let badPwd = do
+          e <- findElem $ containsTextSelector "entered is incorrect"
+          unlessM (isDisplayed e) $ unexpected "Bad password text exists but not visible"
     patiently (tryEither badPwd loginSuccess) >>= \r -> case r of
       Left _  -> fail "Bad password"
       Right _ -> return ()
@@ -83,6 +91,10 @@ tryEither getA getB = do
 uberPage :: String
 uberPage = "https://riders.uber.com"
 
+filterTripsURL :: Year -> Month -> String
+filterTripsURL (Year year) (Month month) =
+  uberPage <> "/trips?month=" <> show year <> "-" <> show month
+
 captchaSuccessClass :: Text
 captchaSuccessClass = "recaptcha-checkbox-checkmark"
 
@@ -102,3 +114,11 @@ tryUntil attempt until = withAsync attempt $ const untilLoop
   go result = case result of 
     Success a -> return a
     Failure   -> untilLoop
+
+yearAndMonths :: Day -> Day -> [(Year, Month)]
+yearAndMonths start end = map mkTuple $ uniq $ map yearMonth days
+  where
+  days = end : [start, addDays 28 start .. end]
+  mkTuple (y, m) = (Year y, Month m)
+  uniq = HS.toList . HS.fromList
+  yearMonth = (\(y, m, _) -> (y, m)) . toGregorian

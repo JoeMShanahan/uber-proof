@@ -116,7 +116,9 @@ tryUntil attempt until = withAsync attempt $ const untilLoop
     Failure   -> untilLoop
 
 yearAndMonths :: Day -> Day -> [(Year, Month)]
-yearAndMonths start end = map mkTuple $ uniq $ map yearMonth days
+yearAndMonths start end
+  | start <= end = map mkTuple $ uniq $ map yearMonth days
+  | otherwise    = []
   where
   days = end : [start, addDays 28 start .. end]
   mkTuple (y, m) = (Year y, Month m)

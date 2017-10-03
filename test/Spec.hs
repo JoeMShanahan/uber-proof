@@ -26,3 +26,7 @@ main = hspec $ do
       let d1 = fromGregorian 2017 01 01
           d2 = fromGregorian 2017 12 31
       yearAndMonths d1 d2 `shouldMatchList` map (\m -> (Year 2017, Month m)) [01 .. 12]
+
+    it "Backwards range returns nothing" $ do
+      let d = fromGregorian 2017 01 01
+      yearAndMonths d (pred d) `shouldMatchList` []

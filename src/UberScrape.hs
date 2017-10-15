@@ -43,7 +43,7 @@ tripsInMonth y m = do
   undefined
 
   where
-    
+
   getTripId t = tripIdFromText =<< stripPrefix "#trip-" t
 
 chromeConfig :: String -> Maybe Int -> WDConfig
@@ -119,9 +119,6 @@ uberPage = "https://riders.uber.com"
 filterTripsURL :: Year -> Month -> String
 filterTripsURL (Year year) (Month month) =
   uberPage <> "/trips?month=" <> show year <> "-" <> show month
-
-captchaSuccessClass :: Text
-captchaSuccessClass = "recaptcha-checkbox-checkmark"
 
 userInputId :: Text
 userInputId = "useridInput"

@@ -26,7 +26,12 @@ getTrips start end host port user pwd = runSession (chromeConfig host port) $ do
 tripsInMonth :: Year -> Month -> WD [UberTrip]
 tripsInMonth y m = do
   openPage $ filterTripsURL y m
-
+  tripIds <- getTripIdsFromTable
+  liftIO $ threadDelay 10000000000000
+  return []
+  
+getTripIdsFromTable :: WD [TripId]
+getTripIdsFromTable = do
   table <- findElem $ ById "trips-table"
   tableBody <- findElemFrom table $ ByTag "tbody"
   rows <- findElemsFrom tableBody $ ByCSS "tr.trip-expand__origin"
@@ -36,14 +41,10 @@ tripsInMonth y m = do
 
   putText $ show idValues
   putText $ show tripIds
-
   unless (length rows == length tripIds) $ error "oops!"
 
-  liftIO $ threadDelay 10000000000000
-  undefined
-
+  return tripIds
   where
-
   getTripId t = tripIdFromText =<< stripPrefix "#trip-" t
 
 chromeConfig :: String -> Maybe Int -> WDConfig
@@ -100,10 +101,10 @@ patiently = waitUntil waitTime
 waitTime :: Double
 waitTime = 60
 
-data WDSuccess a = Success a | Failure
+data WDResult a = Success a | Failure
   deriving (Eq, Show)
 
-tryWD :: WD a -> WD (WDSuccess a)
+tryWD :: WD a -> WD (WDResult a)
 tryWD go = waitUntil 0 (go >>= return . Success) `onTimeout` return Failure
 
 tryEither :: WD a -> WD b -> WD (Either a b)

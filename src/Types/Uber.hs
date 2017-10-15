@@ -7,7 +7,7 @@ module Types.Uber
   , Month (..)
   , Year (..)
 
-  , TripID
+  , TripId
   , tripIdFromText
   ) where
 
@@ -23,7 +23,7 @@ newtype Month = Month Int     deriving (Eq, Show)
 newtype Year  = Year  Integer deriving (Eq, Show)
 
 data UberTrip = UberTrip
-  { uberTripId     :: TripID
+  { uberTripId     :: TripId
   , uberScreenshot :: ByteString -- ^ PNG encoded
   , uberStartTime  :: UTCTime
   , uberStartLoc   :: Text
@@ -32,8 +32,8 @@ data UberTrip = UberTrip
   , userCard       :: BankCard
   } deriving (Eq, Show)
 
-newtype TripID = TripID UUID
+newtype TripId = TripId UUID
   deriving (Eq, Show)
 
-tripIdFromText :: Text -> Maybe TripID
-tripIdFromText = fmap TripID . fromString . unpack
+tripIdFromText :: Text -> Maybe TripId
+tripIdFromText = fmap TripId . fromString . unpack

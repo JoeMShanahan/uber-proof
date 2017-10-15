@@ -26,8 +26,25 @@ getTrips start end host port user pwd = runSession (chromeConfig host port) $ do
 tripsInMonth :: Year -> Month -> WD [UberTrip]
 tripsInMonth y m = do
   openPage $ filterTripsURL y m
+
+  table <- findElem $ ById "trips-table"
+  tableBody <- findElemFrom table $ ByTag "tbody"
+  rows <- findElemsFrom tableBody $ ByCSS "tr.trip-expand__origin"
+  idValues <- mapM (\e -> attr e "data-target") rows
+
+  let tripIds = mapMaybe getTripId $ catMaybes idValues
+
+  putText $ show idValues
+  putText $ show tripIds
+
+  unless (length rows == length tripIds) $ error "oops!"
+
   liftIO $ threadDelay 10000000000000
   undefined
+
+  where
+    
+  getTripId t = tripIdFromText =<< stripPrefix "#trip-" t
 
 chromeConfig :: String -> Maybe Int -> WDConfig
 chromeConfig host port = addPort $ config { wdHost = host }
@@ -132,6 +149,3 @@ yearAndMonths start end
   mkTuple (y, m) = (Year y, Month m)
   uniq = HS.toList . HS.fromList
   yearMonth = (\(y, m, _) -> (y, m)) . toGregorian
-
-uberTripClassToId :: Text -> Maybe Text
-uberTripClassToId = stripPrefix "trips-"

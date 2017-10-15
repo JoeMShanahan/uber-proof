@@ -5,14 +5,15 @@ module UberScrape
   , yearAndMonths
   ) where
 
-import qualified Data.HashSet as HS
-import Data.Text (toLower, isInfixOf, stripPrefix)
+import Uberlude               hiding (withAsync)
+
+import qualified Data.HashSet                    as HS
+import           Data.Text                       (toLower, isInfixOf, stripPrefix)
 import           Data.Time
-import Uberlude hiding (withAsync)
-import Types.Uber
-import Test.WebDriver
-import Test.WebDriver.Commands.Wait (waitUntil, onTimeout, unexpected)
-import Control.Concurrent.Async.Lifted
+import           Types.Uber
+import           Test.WebDriver
+import           Test.WebDriver.Commands.Wait    (waitUntil, onTimeout, unexpected)
+import           Control.Concurrent.Async.Lifted
 
 getTrips :: Day -> Day -> String -> Maybe Int -> Username -> Password -> IO [UberTrip]
 getTrips start end host port user pwd = runSession (chromeConfig host port) $ do

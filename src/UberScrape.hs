@@ -6,12 +6,12 @@ module UberScrape
   ) where
 
 import qualified Data.HashSet as HS
+import Data.Text (toLower, isInfixOf, stripPrefix)
 import           Data.Time
 import Uberlude hiding (withAsync)
 import Types.Uber
 import Test.WebDriver
 import Test.WebDriver.Commands.Wait (waitUntil, onTimeout, unexpected)
-import Data.Text (toLower, isInfixOf)
 import Control.Concurrent.Async.Lifted
 
 getTrips :: Day -> Day -> String -> Maybe Int -> Username -> Password -> IO [UberTrip]
@@ -131,3 +131,6 @@ yearAndMonths start end
   mkTuple (y, m) = (Year y, Month m)
   uniq = HS.toList . HS.fromList
   yearMonth = (\(y, m, _) -> (y, m)) . toGregorian
+
+uberTripClassToId :: Text -> Maybe Text
+uberTripClassToId = stripPrefix "trips-"

@@ -9,6 +9,7 @@ module Types.Uber
 
   , TripId
   , tripIdFromText
+  , tripIdToString
   ) where
 
 import Data.Time
@@ -37,3 +38,6 @@ newtype TripId = TripId UUID
 
 tripIdFromText :: Text -> Maybe TripId
 tripIdFromText = fmap TripId . fromString . unpack
+
+tripIdToString :: TripId -> String
+tripIdToString (TripId uuid) = toString uuid

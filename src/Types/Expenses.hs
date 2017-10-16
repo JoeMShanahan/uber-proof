@@ -4,7 +4,7 @@ module Types.Expenses
   , makeCard
   ) where
 
-import Uberlude
+import           Uberlude
 
 data BankCard = Card CardType Int
   deriving (Eq, Show)

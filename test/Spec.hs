@@ -1,9 +1,9 @@
-import Protolude
-import Test.Hspec
-import Types.Uber
-import UberScrape
-import Data.Time
-import Options
+import           Data.Time
+import           Options
+import           Protolude
+import           Test.Hspec
+import           Types.Uber
+import           UberScrape
 
 main :: IO ()
 main = hspec $ do

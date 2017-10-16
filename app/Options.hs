@@ -4,13 +4,13 @@ module Options
   , parseDay
   ) where
 
-import Options.Applicative
-import Options.Applicative.Types (Parser (NilP))
-import System.Exit
-import Types.Uber
-import Uberlude
-import Data.Time.Format
-import Data.Time
+import           Data.Time
+import           Data.Time.Format
+import           Options.Applicative
+import           Options.Applicative.Types (Parser (NilP))
+import           System.Exit
+import           Types.Uber
+import           Uberlude
 
 data Options = Options
   { optSeleniumServerHost :: String
@@ -80,7 +80,7 @@ parseArgs =
   where
   argsParser =
 
-        Args 
+        Args
     <$> serverHost
     <*> serverPort
     <*> username

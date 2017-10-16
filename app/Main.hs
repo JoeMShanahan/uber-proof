@@ -1,8 +1,8 @@
 module Main where
 
-import Options
-import Uberlude
-import UberScrape
+import           Options
+import           Uberlude
+import           UberScrape
 
 main :: IO ()
 main = withOptions $ \opt -> do

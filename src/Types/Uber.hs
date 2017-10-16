@@ -14,11 +14,11 @@ module Types.Uber
   , tripIdToString
   ) where
 
-import Data.Time
-import Data.UUID
-import Data.Hashable
-import Types.Expenses
-import Uberlude
+import           Data.Hashable
+import           Data.Time
+import           Data.UUID
+import           Types.Expenses
+import           Uberlude
 
 newtype Username = Username Text
 newtype Password = Password Text

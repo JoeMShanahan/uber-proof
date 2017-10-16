@@ -2,4 +2,4 @@ module Expenses
   (
   ) where
 
-import Uberlude
+import           Uberlude

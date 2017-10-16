@@ -26,10 +26,20 @@ getTrips start end host port user pwd = runSession (chromeConfig host port) $ do
 tripsInMonth :: Year -> Month -> WD [UberTrip]
 tripsInMonth y m = do
   openPage $ filterTripsURL y m
-  tripIds <- getTripIdsFromTable
+  tripIds <- traverseTable
+  putText "Done-ish"
   liftIO $ threadDelay 10000000000000
   return []
-  
+
+
+traverseTable :: WD [TripId]
+traverseTable = do
+  tripIds  <- getTripIdsFromTable
+  findNext <- tryWD $ findElem $ ById "next-button-m8"
+  case findNext of
+    Failure      -> return tripIds
+    Success next -> click next >> (tripIds ++) <$> traverseTable
+
 getTripIdsFromTable :: WD [TripId]
 getTripIdsFromTable = do
   table <- findElem $ ById "trips-table"

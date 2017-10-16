@@ -24,6 +24,7 @@ library
   build-depends:       base
                      , lifted-base
                      , friday
+                     , hashable
                      , HUnit
                      , lifted-async
                      , process
@@ -54,6 +55,7 @@ test-suite uber-proof-test
   hs-source-dirs:      test, app, src
   main-is:             Spec.hs
   build-depends:       base
+                     , hashable
                      , hspec
                      , protolude
                      , uber-proof

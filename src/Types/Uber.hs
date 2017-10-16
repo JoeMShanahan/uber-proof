@@ -1,3 +1,5 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 module Types.Uber
   ( UberTrip (..)
 
@@ -14,6 +16,7 @@ module Types.Uber
 
 import Data.Time
 import Data.UUID
+import Data.Hashable
 import Types.Expenses
 import Uberlude
 
@@ -34,7 +37,7 @@ data UberTrip = UberTrip
   } deriving (Eq, Show)
 
 newtype TripId = TripId UUID
-  deriving (Eq, Show)
+  deriving (Eq, Show, Hashable)
 
 tripIdFromText :: Text -> Maybe TripId
 tripIdFromText = fmap TripId . fromString . unpack

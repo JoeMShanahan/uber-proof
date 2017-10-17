@@ -202,6 +202,9 @@ filterTripsURL :: Year -> Month -> String
 filterTripsURL (Year year) (Month month) =
   uberPage <> "/trips?month=" <> show year <> "-" <> show month
 
+filterTripsURLWithPage :: Int -> Year -> Month -> String
+filterTripsURLWithPage page y m = filterTripsURL y m <> "&page=" <> show page
+
 userInputId :: Text
 userInputId = "useridInput"
 

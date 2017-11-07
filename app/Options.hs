@@ -5,12 +5,9 @@ module Options
   ) where
 
 import           Data.Time
-import           Data.Time.Format
 import           Options.Applicative
-import           Options.Applicative.Types (Parser (NilP))
-import           System.Exit
 import           Types.Uber
-import           Uberlude
+import           Uberlude hiding (option)
 
 data Options = Options
   { optSeleniumServerHost :: String
@@ -46,7 +43,7 @@ data ArgsError
   | NoParseEnd
   deriving (Eq, Show)
 
-describeArgsError :: ArgsError -> String
+describeArgsError :: ArgsError -> Text
 describeArgsError err = case err of
   EndBeforeStart -> "Supplied end date is before start date"
   NoParseStart   -> "Could not parse start date"

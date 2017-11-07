@@ -5,16 +5,16 @@ module UberScrape
   , yearAndMonths
   ) where
 
-import           Control.Concurrent.Async.Lifted
 import qualified Data.HashSet                    as HS
 import           Data.Text                       (stripPrefix,
                                                   toLower)
 import           Data.Time
 import           Test.WebDriver
+import           Types.Uber
+import           Uberlude                        
+import SeleniumUtils
 import           Test.WebDriver.Commands.Wait    (onTimeout, unexpected,
                                                   waitUntil, waitUntil')
-import           Types.Uber
-import           Uberlude                        hiding (withAsync)
 
 getTrips :: Day -> Day -> String -> Maybe Int -> Username -> Password -> IO [UberTrip]
 getTrips start end host port user pwd = runSession (chromeConfig host port) $ do
@@ -52,7 +52,7 @@ getTripIdsFromTable = do
 
   let tripIds = mapMaybe getTripId $ catMaybes idValues
 
-  unless (length rows == length tripIds) $ error "oops!"
+  unless (length rows == length tripIds) $ unexpected "Unparsable trip id met"
 
   return tripIds
   where
@@ -101,35 +101,6 @@ performUberLogin (Username user) (Password pwd) = do
 loginSuccess :: WD ()
 loginSuccess = void $ findElem $ containsTextSelector "MY TRIPS"
 
-containsTextSelector :: Text -> Selector
-containsTextSelector t = ByXPath $
-     "//*[text()[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'),'"
-  <> toLower t
-  <> "')]]"
-
-patiently :: WD a -> WD a
-patiently go = waitUntil' 0 waitTime catchEmAll
-  where
-  -- | I freely admit this is shameful, but this function is supposed to keep trying no matter what.
-  catchEmAll = go `catch` superBadCatcher
-  superBadCatcher :: SomeException -> WD a
-  superBadCatcher e = unexpected $ "I failed: " <> show e
-
-waitTime :: Double
-waitTime = 60
-
-data WDResult a = Success a | Failure
-  deriving (Eq, Show)
-
-tryWD :: WD a -> WD (WDResult a)
-tryWD go = waitUntil 0 (go >>= return . Success) `onTimeout` return Failure
-
-tryEither :: WD a -> WD b -> WD (Either a b)
-tryEither getA getB = do
-  a <- tryWD getA
-  case a of
-    Success s -> return $ Left s
-    Failure   -> Right <$> getB
 
 yearAndMonths :: Day -> Day -> [(Year, Month)]
 yearAndMonths start end
@@ -160,11 +131,3 @@ userInputId = "useridInput"
 
 passwordInputId :: Text
 passwordInputId = "password"
-
-tryUntil :: WD a -> WD a -> WD a
-tryUntil attempt until = withAsync attempt $ const untilLoop
-  where
-  untilLoop = go =<< tryWD until
-  go result = case result of
-    Success a -> return a
-    Failure   -> untilLoop

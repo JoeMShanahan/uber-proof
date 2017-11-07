@@ -17,6 +17,7 @@ library
   exposed-modules:     Expenses
                        Reconciliation
                        UberScrape
+                       SeleniumUtils
                        Types.Expenses
                        Types.Uber
                        Types.Reconciliation

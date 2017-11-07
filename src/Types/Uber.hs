@@ -12,6 +12,7 @@ module Types.Uber
   , TripId
   , tripIdFromText
   , tripIdToString
+  , tripIdText
   ) where
 
 import           Data.Hashable
@@ -44,3 +45,6 @@ tripIdFromText = fmap TripId . fromString . unpack
 
 tripIdToString :: TripId -> String
 tripIdToString (TripId uuid) = toString uuid
+
+tripIdText :: TripId -> Text
+tripIdText = pack . tripIdToString

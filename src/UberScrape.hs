@@ -6,15 +6,13 @@ module UberScrape
   ) where
 
 import qualified Data.HashSet                    as HS
-import           Data.Text                       (stripPrefix,
-                                                  toLower)
+import           Data.Text                       (stripPrefix)
 import           Data.Time
 import           Test.WebDriver
 import           Types.Uber
 import           Uberlude                        
 import SeleniumUtils
-import           Test.WebDriver.Commands.Wait    (onTimeout, unexpected,
-                                                  waitUntil, waitUntil')
+import           Test.WebDriver.Commands.Wait    
 
 getTrips :: Day -> Day -> String -> Maybe Int -> Username -> Password -> IO [UberTrip]
 getTrips start end host port user pwd = runSession (chromeConfig host port) $ do
@@ -42,7 +40,6 @@ traverseTableWith mkUrl = go 1
       [] -> return ids
       _  -> (ids ++) <$> go (n + 1)
 
-
 getTripIdsFromTable :: WD [TripId]
 getTripIdsFromTable = do
   table     <- findElem $ ById "trips-table"
@@ -57,7 +54,6 @@ getTripIdsFromTable = do
   return tripIds
   where
   getTripId t = tripIdFromText =<< stripPrefix "#trip-" t
-
 
 chromeConfig :: String -> Maybe Int -> WDConfig
 chromeConfig host port = addPort $ config { wdHost = host }
@@ -123,6 +119,9 @@ filterTripsURL (Year year) (Month month) =
 
 filterTripsURLWithPage :: Int -> Year -> Month -> String
 filterTripsURLWithPage page y m = filterTripsURL y m <> "&page=" <> show page
+
+tripPage :: TripId -> String
+tripPage tripId = uberPage <> "/trip/" <> tripIdToString tripId
 
 {- Element keys -}
 

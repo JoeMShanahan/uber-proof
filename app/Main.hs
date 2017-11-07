@@ -12,4 +12,6 @@ main = withOptions $ \opt -> do
       password  = optUberPass opt
       start     = optStart opt
       end       = optEnd opt
-  void $ getTrips start end host port user password
+
+  result <- getTrips start end host port user password
+  putText $ show result

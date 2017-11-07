@@ -5,30 +5,62 @@ module UberScrape
   , yearAndMonths
   ) where
 
-import qualified Data.HashSet                    as HS
-import           Data.Text                       (stripPrefix)
+import qualified Data.HashSet                 as HS
+import           Data.Text                    (stripPrefix)
 import           Data.Time
+import           SeleniumUtils
 import           Test.WebDriver
+import           Test.WebDriver.Commands.Wait
 import           Types.Uber
-import           Uberlude                        
-import SeleniumUtils
-import           Test.WebDriver.Commands.Wait    
+import           Uberlude
 
-getTrips :: Day -> Day -> String -> Maybe Int -> Username -> Password -> IO [UberTrip]
+data TripScrapeResult = TripScrapeResult
+  { tripsRetrieved :: [UberTrip]
+  , tripsFailed    :: [TripRetrievalFailure]
+  , tripMonth      :: Month
+  , tripYear       :: Year
+  } deriving (Eq, Show)
+
+data TripRetrievalFailure = TripRetrievalFailure TripId
+  deriving (Eq, Show)
+
+getTrips :: Day -> Day -> String -> Maybe Int -> Username -> Password -> IO [TripScrapeResult]
 getTrips start end host port user pwd = runSession (chromeConfig host port) $ do
-  openPage uberPage 
+  openPage uberPage
   performUberLogin user pwd
   let monthPairs = yearAndMonths start end
       trips (y, m) = tripsInMonth y m
-  concat <$> mapM trips monthPairs
+  mapM trips monthPairs
 
-tripsInMonth :: Year -> Month -> WD [UberTrip]
+tripsInMonth :: Year -> Month -> WD TripScrapeResult
 tripsInMonth y m = do
   openPage $ filterTripsURL y m
   tripIds <- traverseTableWith $ \n -> filterTripsURLWithPage n y m
+  eTrips <- forM tripIds $ \tripId -> do
+    tripAttempt <- tryWD $ getTripInfo tripId
+    return $ case tripAttempt of
+      Success trip -> Right trip
+      Failure      -> Left $ TripRetrievalFailure tripId
+  return $ constructResult y m eTrips
+  where
 
-  putText $ show $ length tripIds
-  return []
+constructResult :: Year -> Month -> [Either TripRetrievalFailure UberTrip] -> TripScrapeResult
+constructResult y m = intoType . partitionEithers
+  where
+  intoType (problems, results) = TripScrapeResult results problems m y
+
+getTripInfo :: TripId -> WD UberTrip
+getTripInfo tripId = do
+  openPage $ tripPage tripId
+  return UberTrip
+    { uberTripId     = tripId
+    , uberScreenshot = ""
+    , uberStartTime  = UTCTime (fromGregorian 2017 01 01) 0
+    , uberStartLoc   = "Nowhere"
+    , uberEndLoc     = "Somewhere"
+    , uberCost       = 0
+    , userCard       = undefined
+    }
 
 traverseTableWith :: (Int -> String) -> WD [TripId]
 traverseTableWith mkUrl = go 1
@@ -38,7 +70,7 @@ traverseTableWith mkUrl = go 1
     ids <- getTripIdsFromTable
     case ids of
       [] -> return ids
-      _  -> (ids ++) <$> go (n + 1)
+      _  -> (ids <>) <$> go (n + 1)
 
 getTripIdsFromTable :: WD [TripId]
 getTripIdsFromTable = do
@@ -49,7 +81,7 @@ getTripIdsFromTable = do
 
   let tripIds = mapMaybe getTripId $ catMaybes idValues
 
-  unless (length rows == length tripIds) $ unexpected "Unparsable trip id met"
+  unless (length rows == length tripIds) $ unexpected "Unparsible trip id met"
 
   return tripIds
   where

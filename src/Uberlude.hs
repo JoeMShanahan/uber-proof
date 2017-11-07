@@ -3,8 +3,10 @@ module Uberlude
   ) where
 
 import           Control.Exception.Base   as Reexported (throw)
+import           Control.Exception.Lifted as Reexported (Handler (..), catch,
+                                                         catches)
 import           Control.Monad            as Reexported (fail)
 import           Data.Text                as Reexported (pack, unpack)
 import           Prelude                  as Reexported (String)
-import           Protolude                as Reexported hiding (Selector, catches, catch)
-import           Control.Exception.Lifted as Reexported (catch, catches, Handler (..))
+import           Protolude                as Reexported hiding (Selector, catch,
+                                                         catches)

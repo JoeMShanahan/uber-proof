@@ -1,25 +1,26 @@
 
-module SeleniumUtils 
-  ( 
+module SeleniumUtils
+  (
   -- * Selectors
     containsTextSelector
 
-  -- * Helpers 
+  -- * Helpers
   , patiently
 
   -- * Graceful failure
   , WDResult (..)
+  , maybeWDResult
   , tryWD
   , tryEither
   , tryUntil
   ) where
 
-import Uberlude hiding (withAsync)
-import Data.Text (toLower)
-import Test.WebDriver
+import           Control.Concurrent.Async.Lifted
+import           Data.Text                       (toLower)
+import           Test.WebDriver
 import           Test.WebDriver.Commands.Wait    (onTimeout, unexpected,
                                                   waitUntil, waitUntil')
-import           Control.Concurrent.Async.Lifted
+import           Uberlude                        hiding (withAsync)
 
 containsTextSelector :: Text -> Selector
 containsTextSelector t = ByXPath $
@@ -31,8 +32,7 @@ containsTextSelector t = ByXPath $
   <> toLower t
   <> "')]]"
   where
-  lowers, uppers :: Text
-  lowers = pack ['a'..'z']
+  lowers = toLower uppers
   uppers = pack ['A'..'Z']
 
 patiently :: WD a -> WD a
@@ -49,6 +49,10 @@ waitTime = 60
 data WDResult a = Success a | Failure
   deriving (Eq, Show)
 
+maybeWDResult :: WDResult a -> Maybe a
+maybeWDResult (Success a) = Just a
+maybeWDResult Failure     = Nothing
+
 tryWD :: WD a -> WD (WDResult a)
 tryWD go = waitUntil 0 (go >>= return . Success) `onTimeout` return Failure
 
@@ -60,9 +64,9 @@ tryEither getA getB = do
     Failure   -> Right <$> getB
 
 tryUntil :: WD a -> WD a -> WD a
-tryUntil attempt until = withAsync attempt $ const untilLoop
+tryUntil attempt reqSuccess = withAsync attempt $ const untilLoop
   where
-  untilLoop = go =<< tryWD until
+  untilLoop = go =<< tryWD reqSuccess
   go result = case result of
     Success a -> return a
     Failure   -> untilLoop

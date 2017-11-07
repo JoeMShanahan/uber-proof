@@ -7,7 +7,7 @@ module Options
 import           Data.Time
 import           Options.Applicative
 import           Types.Uber
-import           Uberlude hiding (option)
+import           Uberlude            hiding (option)
 
 data Options = Options
   { optSeleniumServerHost :: String

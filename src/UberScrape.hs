@@ -19,7 +19,7 @@ import           Uberlude                        hiding (withAsync)
 
 getTrips :: Day -> Day -> String -> Maybe Int -> Username -> Password -> IO [UberTrip]
 getTrips start end host port user pwd = runSession (chromeConfig host port) $ do
-  openPage uberPage
+  openPage uberPage 
   performUberLogin user pwd
   let months = yearAndMonths start end
       trips (y, m) = tripsInMonth y m
@@ -28,55 +28,31 @@ getTrips start end host port user pwd = runSession (chromeConfig host port) $ do
 tripsInMonth :: Year -> Month -> WD [UberTrip]
 tripsInMonth y m = do
   openPage $ filterTripsURL y m
-  tripIds <- traverseTable
-  putText "Done-ish"
-  liftIO $ threadDelay 10000000000000
+  tripIds <- traverseTableWith $ \n -> filterTripsURLWithPage n y m
+
+  putText $ show $ length tripIds
   return []
 
+traverseTableWith :: (Int -> String) -> WD [TripId]
+traverseTableWith mkUrl = go 1
+  where
+  go n = do
+    openPage $ mkUrl n
+    ids <- getTripIdsFromTable
+    case ids of
+      [] -> return ids
+      _  -> (ids ++) <$> go (n + 1)
 
-traverseTable :: WD [TripId]
-traverseTable = do
-  tripIds  <- getTripIdsFromTable
-  findNext <- tryWD getNext
-  case findNext of
-    Success (PaginationButton next Enabled) -> do
-      putText "Moving page"
-      patiently $ do
-        click next
-        newIds <- getTripIdsFromTable
-        when (newIds `isSubsequenceOf` tripIds) $ unexpected "Same list"
-      putText "Page moved"
-      (tripIds ++) <$> traverseTable
-    _ -> return tripIds
-
--- waitForTableToUpdate :: WD ()
--- waitForTableToUpdate = do
---   putText "Looking for disabled loader"
---   patiently getDisabledLoader
---   putText "Waiting for loader to disappear"
---   patiently assertNoLoader
---   where
---   getDisabledLoader = do
---     l <- getLoader
---     unless (isDisabledLoader l) $ unexpected "Loader not found"
---   isDisabledLoader (PaginationButton _ Disabled) = True
---   isDisabledLoader _                             = False
-
---   assertNoLoader = do
---     l <- tryWD getLoader
---     unless (l == Failure) $ unexpected "Found loader"
 
 getTripIdsFromTable :: WD [TripId]
 getTripIdsFromTable = do
-  table <- findElem $ ById "trips-table"
+  table     <- findElem $ ById "trips-table"
   tableBody <- findElemFrom table $ ByTag "tbody"
-  rows <- findElemsFrom tableBody $ ByCSS "tr.trip-expand__origin"
-  idValues <- mapM (\e -> attr e "data-target") rows
+  rows      <- findElemsFrom tableBody $ ByCSS "tr.trip-expand__origin"
+  idValues  <- mapM (\e -> attr e "data-target") rows
 
   let tripIds = mapMaybe getTripId $ catMaybes idValues
 
-  putText $ show idValues
-  putText $ show tripIds
   unless (length rows == length tripIds) $ error "oops!"
 
   return tripIds

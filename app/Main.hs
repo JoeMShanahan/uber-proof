@@ -14,4 +14,4 @@ main = withOptions $ \opt -> do
       end       = optEnd opt
 
   result <- getTrips start end host port user password
-  putText $ show result
+  return ()

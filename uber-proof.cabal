@@ -23,6 +23,7 @@ library
                        Types.Reconciliation
                        Uberlude
   build-depends:       base
+                     , aeson
                      , lifted-base
                      , friday
                      , hashable

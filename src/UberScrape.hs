@@ -7,6 +7,7 @@ module UberScrape
 
 import qualified Data.HashSet                 as HS
 import           Data.Text                    (stripPrefix)
+import Data.Aeson (Value)
 import           Data.Time
 import           SeleniumUtils
 import           Test.WebDriver
@@ -19,10 +20,10 @@ data TripScrapeResult = TripScrapeResult
   , tripsFailed    :: [TripRetrievalFailure]
   , tripMonth      :: Month
   , tripYear       :: Year
-  } deriving (Eq, Show)
+  } deriving (Show)
 
-data TripRetrievalFailure = TripRetrievalFailure TripId
-  deriving (Eq, Show)
+data TripRetrievalFailure = TripRetrievalFailure TripId FailedCommand
+  deriving (Show)
 
 getTrips :: Day -> Day -> String -> Maybe Int -> Username -> Password -> IO [TripScrapeResult]
 getTrips start end host port user pwd = runSession (chromeConfig host port) $ do
@@ -33,16 +34,25 @@ getTrips start end host port user pwd = runSession (chromeConfig host port) $ do
   mapM trips monthPairs
 
 tripsInMonth :: Year -> Month -> WD TripScrapeResult
-tripsInMonth y m = do
+tripsInMonth y@(Year yy) m@(Month mm) = do
   openPage $ filterTripsURL y m
+  putText "Looking for trip ids"
   tripIds <- traverseTableWith $ \n -> filterTripsURLWithPage n y m
+  putText $ "Found " <> show (length tripIds) <> " trip(s) for " <> show yy <> "-" <> show mm
+  putText "Retrieving trip info"
   eTrips <- forM tripIds $ \tripId -> do
     tripAttempt <- tryWD $ getTripInfo tripId
-    return $ case tripAttempt of
-      Success trip -> Right trip
-      Failure      -> Left $ TripRetrievalFailure tripId
-  return $ constructResult y m eTrips
-  where
+    case tripAttempt of
+      Success trip -> return $ Right trip
+      Failure err  -> do
+        putText $ "Failed to get trip " <> tripIdText tripId
+        return $ Left $ TripRetrievalFailure tripId err
+  let result = constructResult y m eTrips
+  putText $ "Result completed, successful trip retrievals: "
+         <> show (length $ tripsRetrieved result)
+         <> "/"
+         <> show (length tripIds)
+  return result
 
 constructResult :: Year -> Month -> [Either TripRetrievalFailure UberTrip] -> TripScrapeResult
 constructResult y m = intoType . partitionEithers
@@ -52,6 +62,7 @@ constructResult y m = intoType . partitionEithers
 getTripInfo :: TripId -> WD UberTrip
 getTripInfo tripId = do
   openPage $ tripPage tripId
+  void $ (executeJS [] deleteTripBarJS :: WD Value)
   return UberTrip
     { uberTripId     = tripId
     , uberScreenshot = ""
@@ -81,7 +92,7 @@ getTripIdsFromTable = do
 
   let tripIds = mapMaybe getTripId $ catMaybes idValues
 
-  unless (length rows == length tripIds) $ unexpected "Unparsible trip id met"
+  unless (length rows == length tripIds) $ unexpected "Unparsable trip id met"
 
   return tripIds
   where
@@ -99,7 +110,7 @@ performUberLogin (Username user) (Password pwd) = do
   attempt <- tryWD loginProcedure
   case attempt of
     Success _ -> putText "Login successful"
-    Failure   -> unexpected "Login failed!"
+    Failure e -> unexpected $ "Login failed! Reason:\n" <> show e
 
   where
   loginProcedure = do
@@ -153,7 +164,7 @@ filterTripsURLWithPage :: Int -> Year -> Month -> String
 filterTripsURLWithPage page y m = filterTripsURL y m <> "&page=" <> show page
 
 tripPage :: TripId -> String
-tripPage tripId = uberPage <> "/trip/" <> tripIdToString tripId
+tripPage tripId = uberPage <> "/trips/" <> tripIdToString tripId
 
 {- Element keys -}
 
@@ -162,3 +173,10 @@ userInputId = "useridInput"
 
 passwordInputId :: Text
 passwordInputId = "password"
+
+tripActionBarId :: Text
+tripActionBarId = "trip-details__actions"
+
+-- | Ugh!
+deleteTripBarJS :: Text
+deleteTripBarJS = "var elem = document.getElementById(\""<>tripActionBarId<>"\"); elem.parentNode.removeChild(elem);"

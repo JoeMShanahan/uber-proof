@@ -46,22 +46,22 @@ patiently go = waitUntil' 0 waitTime catchEmAll
 waitTime :: Double
 waitTime = 60
 
-data WDResult a = Success a | Failure
-  deriving (Eq, Show)
+data WDResult a = Success a | Failure FailedCommand
+  deriving (Show)
 
 maybeWDResult :: WDResult a -> Maybe a
 maybeWDResult (Success a) = Just a
-maybeWDResult Failure     = Nothing
+maybeWDResult (Failure _) = Nothing
 
 tryWD :: WD a -> WD (WDResult a)
-tryWD go = waitUntil 0 (go >>= return . Success) `onTimeout` return Failure
+tryWD go = (go >>= return . Success) `catch` (return . Failure)
 
 tryEither :: WD a -> WD b -> WD (Either a b)
 tryEither getA getB = do
   a <- tryWD getA
   case a of
     Success s -> return $ Left s
-    Failure   -> Right <$> getB
+    Failure _ -> Right <$> getB
 
 tryUntil :: WD a -> WD a -> WD a
 tryUntil attempt reqSuccess = withAsync attempt $ const untilLoop
@@ -69,4 +69,4 @@ tryUntil attempt reqSuccess = withAsync attempt $ const untilLoop
   untilLoop = go =<< tryWD reqSuccess
   go result = case result of
     Success a -> return a
-    Failure   -> untilLoop
+    Failure _ -> untilLoop

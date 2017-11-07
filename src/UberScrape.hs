@@ -7,8 +7,7 @@ module UberScrape
 
 import           Control.Concurrent.Async.Lifted
 import qualified Data.HashSet                    as HS
-import           Data.List                       (isSubsequenceOf)
-import           Data.Text                       (isInfixOf, stripPrefix,
+import           Data.Text                       (stripPrefix,
                                                   toLower)
 import           Data.Time
 import           Test.WebDriver
@@ -21,9 +20,9 @@ getTrips :: Day -> Day -> String -> Maybe Int -> Username -> Password -> IO [Ube
 getTrips start end host port user pwd = runSession (chromeConfig host port) $ do
   openPage uberPage 
   performUberLogin user pwd
-  let months = yearAndMonths start end
+  let monthPairs = yearAndMonths start end
       trips (y, m) = tripsInMonth y m
-  concat <$> mapM trips months
+  concat <$> mapM trips monthPairs
 
 tripsInMonth :: Year -> Month -> WD [UberTrip]
 tripsInMonth y m = do
@@ -59,43 +58,6 @@ getTripIdsFromTable = do
   where
   getTripId t = tripIdFromText =<< stripPrefix "#trip-" t
 
-
-data DisabledState = Enabled | Disabled
-  deriving (Eq, Show)
-
-data PaginationButton = PaginationButton Element DisabledState
-  deriving (Eq, Show)
-
-getLoader :: WD PaginationButton
-getLoader = fromPaginationSection $ ByClass "btn-loader"
-
-getPrev :: WD PaginationButton
-getPrev = fromPaginationSection $ ByClass "icon_left-arrow"
-
-getNext :: WD PaginationButton
-getNext = fromPaginationSection $ ByClass "icon_right-arrow"
-
-fromPaginationSection :: Selector -> WD PaginationButton
-fromPaginationSection s = do
-  section <- getPaginationSection
-  pinnedElement <- findElemFrom section s
-
-  disabledContainers <- findElemsFrom pinnedElement $
-    ByXPath "./ancestor::div[contains(@class,'inactive')]"
-
-  link <- tryWD $ findElemFrom pinnedElement $ ByXPath "./ancestor::a"
-
-  let elementToReturn = case link of
-        Success element -> element
-        Failure         -> pinnedElement
-      disabledState = case disabledContainers of
-        [] -> Enabled
-        _  -> Disabled
-
-  return $ PaginationButton elementToReturn disabledState
-
-getPaginationSection :: WD Element
-getPaginationSection = findElem $ ById "trips-pagination"
 
 chromeConfig :: String -> Maybe Int -> WDConfig
 chromeConfig host port = addPort $ config { wdHost = host }
@@ -161,8 +123,6 @@ data WDResult a = Success a | Failure
 
 tryWD :: WD a -> WD (WDResult a)
 tryWD go = waitUntil 0 (go >>= return . Success) `onTimeout` return Failure
-  where
-  f = go `catches` []
 
 tryEither :: WD a -> WD b -> WD (Either a b)
 tryEither getA getB = do
@@ -170,6 +130,18 @@ tryEither getA getB = do
   case a of
     Success s -> return $ Left s
     Failure   -> Right <$> getB
+
+yearAndMonths :: Day -> Day -> [(Year, Month)]
+yearAndMonths start end
+  | start <= end = map mkTuple $ uniq $ map yearMonth days
+  | otherwise    = []
+  where
+  days = end : [start, addDays 28 start .. end]
+  mkTuple (y, m) = (Year y, Month m)
+  uniq = HS.toList . HS.fromList
+  yearMonth = (\(y, m, _) -> (y, m)) . toGregorian
+
+{- URLs -}
 
 uberPage :: String
 uberPage = "https://riders.uber.com"
@@ -181,14 +153,13 @@ filterTripsURL (Year year) (Month month) =
 filterTripsURLWithPage :: Int -> Year -> Month -> String
 filterTripsURLWithPage page y m = filterTripsURL y m <> "&page=" <> show page
 
+{- Element keys -}
+
 userInputId :: Text
 userInputId = "useridInput"
 
 passwordInputId :: Text
 passwordInputId = "password"
-
-mfaInputId :: Text
-mfaInputId = "verificationCode"
 
 tryUntil :: WD a -> WD a -> WD a
 tryUntil attempt until = withAsync attempt $ const untilLoop
@@ -197,13 +168,3 @@ tryUntil attempt until = withAsync attempt $ const untilLoop
   go result = case result of
     Success a -> return a
     Failure   -> untilLoop
-
-yearAndMonths :: Day -> Day -> [(Year, Month)]
-yearAndMonths start end
-  | start <= end = map mkTuple $ uniq $ map yearMonth days
-  | otherwise    = []
-  where
-  days = end : [start, addDays 28 start .. end]
-  mkTuple (y, m) = (Year y, Month m)
-  uniq = HS.toList . HS.fromList
-  yearMonth = (\(y, m, _) -> (y, m)) . toGregorian

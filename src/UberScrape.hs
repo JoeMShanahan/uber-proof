@@ -1,3 +1,5 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module UberScrape
   ( getTrips
 
@@ -18,6 +20,11 @@ import           Test.WebDriver
 import           Test.WebDriver.Commands.Wait
 import           Types.Uber
 import           Uberlude
+import           Vision.Image hiding (map)
+import           Vision.Primitive (Rect(..))
+import           Vision.Image.Storage.DevIL (Autodetect(..), PNG(..), loadBS, saveBS)
+import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString      as BS
 
 data TripScrapeResult = TripScrapeResult
   { tripsRetrieved :: [UberTrip]
@@ -50,6 +57,7 @@ tripsInMonth y@(Year yy) m@(Month mm) = do
       Success trip -> return $ Right trip
       Failure err  -> do
         putText $ "Failed to get trip " <> tripIdText tripId
+        putText $ show err
         return $ Left $ TripRetrievalFailure tripId err
   let result = constructResult y m eTrips
   putText $ "Result completed, successful trip retrievals: "
@@ -66,17 +74,44 @@ constructResult y m = intoType . partitionEithers
 getTripInfo :: TripId -> WD UberTrip
 getTripInfo tripId = do
   openPage $ tripPage tripId
-  void $ (executeJS [] deleteTripBarJS :: WD Value)
-  saveScreenshot $ tripIdToString tripId <> ".png"
+
+  croppedBytes <- takeTripScreenshot
+
   return UberTrip
     { uberTripId     = tripId
-    , uberScreenshot = ""
+    , uberScreenshot = croppedBytes
     , uberStartTime  = UTCTime (fromGregorian 2017 01 01) 0
     , uberStartLoc   = "Nowhere"
     , uberEndLoc     = "Somewhere"
     , uberCost       = 0
     , userCard       = undefined
     }
+
+takeTripScreenshot :: WD ByteString
+takeTripScreenshot = do
+  -- Get rid of the trip bar buttons
+  void (executeJS [] deleteTripBarJS :: WD Value)
+
+  screenshotBytes       <- screenshot
+  tripDetails           <- findElem $ ByClass tripDetailsDivClass
+  (eleX, eleY)          <- elemPos tripDetails
+  (eleWidth, eleHeight) <- elemSize tripDetails
+
+  let rect = Rect { rX = eleX
+                  , rY = eleY
+                  , rWidth  = fromIntegral eleWidth
+                  , rHeight = fromIntegral eleHeight
+                  }
+
+  image <- case loadBS Autodetect $ BSL.toStrict screenshotBytes of
+    Left err  -> unexpected $ "Failed to process image: " <> show err
+    Right img -> return (img :: RGB)
+  
+  let cropped = crop rect image :: RGB
+  
+  case saveBS PNG cropped of
+    Left err    -> unexpected $ "Failed to convert image to bytes: " <> show err
+    Right bytes -> return bytes
 
 traverseTableWith :: (Int -> String) -> WD [TripId]
 traverseTableWith mkUrl = go 1
@@ -181,6 +216,9 @@ passwordInputId = "password"
 
 tripActionBarId :: Text
 tripActionBarId = "trip-details__actions"
+
+tripDetailsDivClass :: Text
+tripDetailsDivClass = "page-content"
 
 -- | Ugh!
 deleteTripBarJS :: Text

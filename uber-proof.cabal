@@ -26,6 +26,8 @@ library
                      , aeson
                      , lifted-base
                      , friday
+                     , friday-devil
+                     , bytestring
                      , hashable
                      , HUnit
                      , lifted-async

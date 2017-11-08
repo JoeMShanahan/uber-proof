@@ -13,10 +13,13 @@ module Types.Uber
   , tripIdFromText
   , tripIdToString
   , tripIdText
+
+  , parseUberTime
   ) where
 
 import           Data.Hashable
 import           Data.Time
+import           Data.Time.Format
 import           Data.UUID
 import           Types.Expenses
 import           Uberlude
@@ -48,3 +51,9 @@ tripIdToString (TripId uuid) = toString uuid
 
 tripIdText :: TripId -> Text
 tripIdText = pack . tripIdToString
+
+parseUberTime :: Text -> Either String LocalTime
+parseUberTime = asum . zipWith tryParse formats . repeat . unpack
+  where
+  formats = ["%l:%M %p on %B %e, %Y"]
+  tryParse = parseTimeM True defaultTimeLocale

@@ -1,6 +1,6 @@
 import           Data.Time
 import           Options
-import           Protolude
+import           Uberlude
 import           Test.Hspec
 import           Types.Uber
 import           UberScrape
@@ -39,3 +39,11 @@ main = hspec $ do
                 ]
 
     forM_ cases $ \d -> it ("Parses " <> d) $ parseDay d `shouldBe` Just expectedDay
+
+  describe "Parse a time from uber" $ do
+    let examples = [ "4:29 PM on August 24, 201"
+                   , "5:11 PM on November 7, 2017"
+                   , "8:06 AM on November 7, 2017"
+                   ]
+    forM_ examples $ \s -> it ("Parses \"" <> s <> "\"") $ unless (isRight $ parseUberTime $ pack s) $
+      expectationFailure $ s <> " - did not parse" 

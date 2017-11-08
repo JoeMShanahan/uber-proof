@@ -14,4 +14,4 @@ main = withOptions $ \opt -> do
       end       = optEnd opt
 
   result <- getTrips start end host port user password
-  return ()
+  forM_ result $ \r -> forM_ (tripsFailed r) $ putText . show

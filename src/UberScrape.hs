@@ -1,6 +1,10 @@
 module UberScrape
   ( getTrips
 
+  -- * Output
+  , TripScrapeResult (..)
+  , TripRetrievalFailure (..)
+
   -- * For tests
   , yearAndMonths
   ) where
@@ -63,6 +67,7 @@ getTripInfo :: TripId -> WD UberTrip
 getTripInfo tripId = do
   openPage $ tripPage tripId
   void $ (executeJS [] deleteTripBarJS :: WD Value)
+  saveScreenshot $ tripIdToString tripId <> ".png"
   return UberTrip
     { uberTripId     = tripId
     , uberScreenshot = ""

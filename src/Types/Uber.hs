@@ -19,7 +19,6 @@ module Types.Uber
 
 import           Data.Hashable
 import           Data.Time
-import           Data.Time.Format
 import           Data.UUID
 import           Types.Expenses
 import           Uberlude

@@ -46,7 +46,7 @@ patiently go = waitUntil' 0 waitTime catchEmAll
 waitTime :: Double
 waitTime = 60
 
-data WDResult a = Success a | Failure FailedCommand
+data WDResult a = Success a | Failure SomeException
   deriving (Show)
 
 maybeWDResult :: WDResult a -> Maybe a

@@ -11,20 +11,20 @@ module UberScrape
   , yearAndMonths
   ) where
 
+import           Data.Aeson                   (Value)
+import qualified Data.ByteString.Lazy         as BSL
 import qualified Data.HashSet                 as HS
 import           Data.Text                    (stripPrefix)
-import Data.Aeson (Value)
 import           Data.Time
 import           SeleniumUtils
 import           Test.WebDriver
 import           Test.WebDriver.Commands.Wait
 import           Types.Uber
 import           Uberlude
-import           Vision.Image hiding (map)
-import           Vision.Primitive (Rect(..))
-import           Vision.Image.Storage.DevIL (Autodetect(..), PNG(..), loadBS, saveBS)
-import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString      as BS
+import           Vision.Image                 hiding (map)
+import           Vision.Image.Storage.DevIL   (Autodetect (..), PNG (..),
+                                               loadBS, saveBS)
+import           Vision.Primitive             (Rect (..))
 
 data TripScrapeResult = TripScrapeResult
   { tripsRetrieved :: [UberTrip]
@@ -33,7 +33,7 @@ data TripScrapeResult = TripScrapeResult
   , tripYear       :: Year
   } deriving (Show)
 
-data TripRetrievalFailure = TripRetrievalFailure TripId FailedCommand
+data TripRetrievalFailure = TripRetrievalFailure TripId SomeException
   deriving (Show)
 
 getTrips :: Day -> Day -> String -> Maybe Int -> Username -> Password -> IO [TripScrapeResult]
@@ -106,9 +106,9 @@ takeTripScreenshot = do
   image <- case loadBS Autodetect $ BSL.toStrict screenshotBytes of
     Left err  -> unexpected $ "Failed to process image: " <> show err
     Right img -> return (img :: RGB)
-  
+
   let cropped = crop rect image :: RGB
-  
+
   case saveBS PNG cropped of
     Left err    -> unexpected $ "Failed to convert image to bytes: " <> show err
     Right bytes -> return bytes

@@ -1,8 +1,8 @@
 import           Data.Time
 import           Options
-import           Uberlude
 import           Test.Hspec
 import           Types.Uber
+import           Uberlude
 import           UberScrape
 
 main :: IO ()
@@ -46,4 +46,4 @@ main = hspec $ do
                    , "8:06 AM on November 7, 2017"
                    ]
     forM_ examples $ \s -> it ("Parses \"" <> s <> "\"") $ unless (isRight $ parseUberTime $ pack s) $
-      expectationFailure $ s <> " - did not parse" 
+      expectationFailure $ s <> " - did not parse"

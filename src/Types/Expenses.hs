@@ -8,7 +8,7 @@ module Types.Expenses
   ) where
 
 import           Uberlude
-import Data.Attoparsec.Text
+import Data.Attoparsec.Text as AP
 import Types.Expenses.Currency as Reexported
 
 data BankCard = Card CardType Int
@@ -24,4 +24,11 @@ makeCard cardType last4Digits
   | otherwise          = Just $ Card cardType last4Digits
 
 parseGBP :: Parser Currency
-parseGBP = undefined
+parseGBP = do
+  void $ char '£'
+  poundsNum <- decimal
+  penceNum <- AP.option 0 $ char '.' >> decimal
+  GBP (Pounds poundsNum) <$> parsePence penceNum
+  where
+  parsePence = maybe mzero return . makePence
+

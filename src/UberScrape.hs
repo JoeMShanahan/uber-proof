@@ -106,8 +106,11 @@ getTripInfo tripId = do
   -- iframes - yay
   focusFrame $ WithElement fareBreakdown
 
-  currenciesElems <- findElems $ ByXPath "//*[contains(text(),'£')]"
-  currencies      <- forM currenciesElems $ \e -> (e,) <$> (expectGBP =<< getText e)
+  currenciesElems <- findElems $ ByXPath "//div[contains(text(),'£')]"
+  currencies      <- forM currenciesElems $ \e -> do
+    valueText <- getText e
+    currency  <- expectGBP valueText
+    return (e, currency)
 
   (fareEle, farePence) <- case maximumMay $ sortOn snd currencies of
     Just a  -> return a
@@ -122,12 +125,9 @@ getTripInfo tripId = do
                       , uberCost       = farePence
                       , userCard       = fromMaybe undefined $ makeCard MasterCard 9999
                       }
-
-  putText $ show trip
   return trip
 
   where
-  currencyParseFail t = unexpected $ "Could not parse currency: \"" <> unpack t <> "\"" :: WD a
   expectGBP v = case parseOnly parseGBP v of
     Left err -> unexpected $ "Could not parse value " <> show v <> ": " <> err
     Right c  -> return c

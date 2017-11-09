@@ -43,7 +43,7 @@ main = hspec $ do
     forM_ cases $ \d -> it ("Parses " <> d) $ parseDay d `shouldBe` Just expectedDay
 
   describe "Parse a time from uber" $ do
-    let examples = [ "4:29 PM on August 24, 201"
+    let examples = [ "4:29 PM on August 24, 2017"
                    , "5:11 PM on November 7, 2017"
                    , "8:06 AM on November 7, 2017"
                    ]
@@ -72,18 +72,18 @@ data CurrencyTest
 runCurrencyTest :: CurrencyTest -> SpecWith ()
 runCurrencyTest test = case test of
   CurrencyParses input ->
-    it (unpack $ "Parse of " <> input <> " succeeds") $ case doParse input of
+    it (unpack $ "Parse of \"" <> input <> "\" succeeds") $ case doParse input of
       Right _  -> return ()
       Left err -> expectationFailure $ "Parse failed: " <> err
 
   CurrencyParseFails input ->
-    it (unpack $ "Parse of " <> input <> " fails") $ case doParse input of
+    it (unpack $ "Parse of \"" <> input <> "\" fails") $ case doParse input of
       Right _ -> expectationFailure "Parse succeeded"
       Left _  -> return ()
 
   CurrencyDisplayAs input output ->
-    it (unpack $ "Parse of " <> input <> " displays as " <> output) $ case doParse input of 
-      Left err   -> expectationFailure $ "Parse failed: " <> err
+    it (unpack $ "Parse of \"" <> input <> "\" displays as \"" <> output <> "\"") $ case doParse input of 
       Right curr -> displayCurrency curr `shouldBe` output
+      Left err   -> expectationFailure $ "Parse failed: " <> err
   where
   doParse = parseOnly parseGBP

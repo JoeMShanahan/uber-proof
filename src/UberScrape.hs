@@ -77,16 +77,43 @@ getTripInfo tripId = do
 
   croppedBytes <- takeTripScreenshot
 
+  timeZone <- liftIO getCurrentTimeZone 
+
+  titleEle      <- findElem $ ByClass "page-lead"
+  tripStartText <- getText =<< findElemFrom titleEle (ByTag "div")
+
+  utcStart <- case parseUberTime tripStartText of
+    Left err   -> unexpected $ "Could not parse time '"<> unpack tripStartText <>"': " <> err
+    Right time -> return $ localTimeToUTC timeZone time
+
+  let getAddress e = getText =<< findElemFrom e (ByTag "h6")
+  [fromEle, toEle] <- findElems $ ByClass "trip-address"
+  fromText         <- getAddress fromEle
+  toText           <- getAddress toEle
+  arrivalTimeText  <- getText =<< findElemFrom toEle (ByTag "p")
+
+  utcEnd <- case parseUberTimeOfDay arrivalTimeText of
+    Left err  -> unexpected $ "Could not parse arrival time '"<> unpack arrivalTimeText <> "': " <> err
+    Right tod -> return $ arrivalTimeFromStart utcStart tod
+
   return UberTrip
     { uberTripId     = tripId
     , uberScreenshot = croppedBytes
-    , uberStartTime  = UTCTime (fromGregorian 2017 01 01) 0
-    , uberEndTime    = UTCTime (fromGregorian 2017 01 01) 0
-    , uberStartLoc   = "Nowhere"
-    , uberEndLoc     = "Somewhere"
+    , uberStartTime  = utcStart
+    , uberEndTime    = utcEnd
+    , uberStartLoc   = fromText
+    , uberEndLoc     = toText
     , uberCost       = 0
     , userCard       = undefined
     }
+
+arrivalTimeFromStart :: UTCTime -> TimeOfDay -> UTCTime
+arrivalTimeFromStart start arriveTimeOfDay =
+  if arriveTimeOfDay < timeToTimeOfDay (utctDayTime start)
+    then withNewToD { utctDay = succ $ utctDay withNewToD }
+    else withNewToD
+  where
+  withNewToD = start { utctDayTime = timeOfDayToTime arriveTimeOfDay }
 
 takeTripScreenshot :: WD ByteString
 takeTripScreenshot = do

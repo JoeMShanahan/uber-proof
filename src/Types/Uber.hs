@@ -15,6 +15,7 @@ module Types.Uber
   , tripIdText
 
   , parseUberTime
+  , parseUberTimeOfDay
   ) where
 
 import           Data.Hashable
@@ -55,5 +56,12 @@ tripIdText = pack . tripIdToString
 parseUberTime :: Text -> Either String LocalTime
 parseUberTime = asum . zipWith tryParse formats . repeat . unpack
   where
-  formats = ["%l:%M %p on %B %e, %Y"]
+  formats = [todFormat <> " on %B %e, %Y"]
   tryParse = parseTimeM True defaultTimeLocale
+
+parseUberTimeOfDay :: Text -> Either String TimeOfDay
+parseUberTimeOfDay = parseTimeM True defaultTimeLocale todFormat . unpack
+  where
+
+todFormat :: String
+todFormat = "%l:%M %p"

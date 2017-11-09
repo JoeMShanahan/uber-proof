@@ -33,6 +33,7 @@ data UberTrip = UberTrip
   { uberTripId     :: TripId
   , uberScreenshot :: ByteString -- ^ PNG encoded
   , uberStartTime  :: UTCTime
+  , uberEndTime    :: UTCTime
   , uberStartLoc   :: Text
   , uberEndLoc     :: Text
   , uberCost       :: Int

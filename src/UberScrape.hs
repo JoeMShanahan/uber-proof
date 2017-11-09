@@ -81,6 +81,7 @@ getTripInfo tripId = do
     { uberTripId     = tripId
     , uberScreenshot = croppedBytes
     , uberStartTime  = UTCTime (fromGregorian 2017 01 01) 0
+    , uberEndTime    = UTCTime (fromGregorian 2017 01 01) 0
     , uberStartLoc   = "Nowhere"
     , uberEndLoc     = "Somewhere"
     , uberCost       = 0

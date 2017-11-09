@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections       #-}
 
 module UberScrape
   ( getTrips
@@ -19,6 +20,7 @@ import           Data.Time
 import           SeleniumUtils
 import           Test.WebDriver
 import           Test.WebDriver.Commands.Wait
+import           Types.Expenses
 import           Types.Uber
 import           Uberlude
 import           Vision.Image                 hiding (map)
@@ -96,16 +98,32 @@ getTripInfo tripId = do
     Left err  -> unexpected $ "Could not parse arrival time '"<> unpack arrivalTimeText <> "': " <> err
     Right tod -> return $ arrivalTimeFromStart utcStart tod
 
-  return UberTrip
-    { uberTripId     = tripId
-    , uberScreenshot = croppedBytes
-    , uberStartTime  = utcStart
-    , uberEndTime    = utcEnd
-    , uberStartLoc   = fromText
-    , uberEndLoc     = toText
-    , uberCost       = 0
-    , userCard       = undefined
-    }
+
+  fareBreakdown <- findElem $ ById "receipt-frame"
+  focusFrame $ WithElement fareBreakdown
+  currencies    <- findElems $ ByXPath "//*[contains(text(),'£')]"
+  withValues    <- forM currencies $ \e -> (e,) <$> getText e
+  let currencyParseFail t = unexpected $ "Could not parse currency: \"" <> unpack t <> "\"" :: WD a
+      tryParseCurrency t  = maybe (currencyParseFail t) return $ parseGBP t
+  penceValues   <- forM withValues $ \(e,v) -> (e,) <$> tryParseCurrency v
+
+  (fareEle, farePence) <- case maximumMay $ sortOn snd penceValues of
+    Just a  -> return a
+    Nothing -> unexpected $ "Could not find max value from " <> show penceValues 
+
+  let trip = UberTrip { uberTripId     = tripId
+                      , uberScreenshot = croppedBytes
+                      , uberStartTime  = utcStart
+                      , uberEndTime    = utcEnd
+                      , uberStartLoc   = fromText
+                      , uberEndLoc     = toText
+                      , uberCost       = farePence
+                      , userCard       = fromMaybe undefined $ makeCard MasterCard 9999
+                      }
+
+  putText $ show trip
+  return trip
+
 
 arrivalTimeFromStart :: UTCTime -> TimeOfDay -> UTCTime
 arrivalTimeFromStart start arriveTimeOfDay =

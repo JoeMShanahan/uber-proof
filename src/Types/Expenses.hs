@@ -2,6 +2,7 @@ module Types.Expenses
   ( BankCard
   , CardType (..)
   , makeCard
+  , parseGBP
   ) where
 
 import           Uberlude
@@ -17,3 +18,6 @@ makeCard cardType last4Digits
   | last4Digits < 0    = Nothing
   | last4Digits > 9999 = Nothing
   | otherwise          = Just $ Card cardType last4Digits
+
+parseGBP :: Text -> Maybe Int
+parseGBP = undefined

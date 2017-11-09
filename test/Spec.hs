@@ -2,6 +2,7 @@ import           Data.Time
 import           Options
 import           Test.Hspec
 import           Types.Uber
+import           Types.Expenses
 import           Uberlude
 import           UberScrape
 
@@ -47,3 +48,8 @@ main = hspec $ do
                    ]
     forM_ examples $ \s -> it ("Parses \"" <> s <> "\"") $ unless (isRight $ parseUberTime $ pack s) $
       expectationFailure $ s <> " - did not parse"
+
+  describe "Parse some monies" $ do
+    it "£3.33" $ parseGBP "£3.33" `shouldBe` Just 333
+    it "£3"    $ parseGBP "£3"    `shouldBe` Just 300
+    it "£0"    $ parseGBP "£0"    `shouldBe` Just 0

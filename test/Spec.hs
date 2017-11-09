@@ -5,6 +5,7 @@ import           Types.Uber
 import           Types.Expenses
 import           Uberlude
 import           UberScrape
+import Data.Attoparsec.Text
 
 main :: IO ()
 main = hspec $ do
@@ -49,7 +50,40 @@ main = hspec $ do
     forM_ examples $ \s -> it ("Parses \"" <> s <> "\"") $ unless (isRight $ parseUberTime $ pack s) $
       expectationFailure $ s <> " - did not parse"
 
-  describe "Parse some monies" $ do
-    it "£3.33" $ parseGBP "£3.33" `shouldBe` Just 333
-    it "£3"    $ parseGBP "£3"    `shouldBe` Just 300
-    it "£0"    $ parseGBP "£0"    `shouldBe` Just 0
+  describe "Parse some monies" $ mapM_ runCurrencyTest
+    [ CurrencyParses "£3.33"
+    , CurrencyParses "£3"   
+    , CurrencyParses "£0"
+
+    , CurrencyParseFails "abc"
+    , CurrencyParseFails "$20"
+    , CurrencyParseFails "£1.102"
+
+    , CurrencyDisplayAs "£3.33" "£3.33"
+    , CurrencyDisplayAs "£3"    "£3.00"
+    , CurrencyDisplayAs "£0"    "£0.00"
+    ]
+
+data CurrencyTest
+  = CurrencyParses Text
+  | CurrencyParseFails Text
+  | CurrencyDisplayAs Text Text
+
+runCurrencyTest :: CurrencyTest -> SpecWith ()
+runCurrencyTest test = case test of
+  CurrencyParses input ->
+    it (unpack $ "Parse of " <> input <> " succeeds") $ case doParse input of
+      Right _  -> return ()
+      Left err -> expectationFailure $ "Parse failed: " <> err
+
+  CurrencyParseFails input ->
+    it (unpack $ "Parse of " <> input <> " fails") $ case doParse input of
+      Right _ -> expectationFailure "Parse succeeded"
+      Left _  -> return ()
+
+  CurrencyDisplayAs input output ->
+    it (unpack $ "Parse of " <> input <> " displays as " <> output) $ case doParse input of 
+      Left err   -> expectationFailure $ "Parse failed: " <> err
+      Right curr -> displayCurrency curr `shouldBe` output
+  where
+  doParse = parseOnly parseGBP

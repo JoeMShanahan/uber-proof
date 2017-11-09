@@ -19,12 +19,14 @@ library
                        Reconciliation
                        SeleniumUtils
                        Types.Expenses
+                       Types.Expenses.Currency
                        Types.Uber
                        Types.Reconciliation
                        UberScrape
                        Uberlude
   build-depends:       base
                      , aeson
+                     , attoparsec
                      , lifted-base
                      , friday
                      , friday-devil
@@ -62,6 +64,7 @@ test-suite uber-proof-test
   main-is:             Spec.hs
   build-depends:       base
                      , hspec
+                     , attoparsec
                      , uber-proof
                      , time
   ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N

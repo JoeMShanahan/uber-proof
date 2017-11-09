@@ -37,7 +37,7 @@ data UberTrip = UberTrip
   , uberEndTime    :: UTCTime
   , uberStartLoc   :: Text
   , uberEndLoc     :: Text
-  , uberCost       :: Int
+  , uberCost       :: Currency
   , userCard       :: BankCard
   } deriving (Eq, Show)
 

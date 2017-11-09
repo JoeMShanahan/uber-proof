@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections       #-}
 
@@ -18,6 +19,7 @@ import qualified Data.HashSet                 as HS
 import           Data.Text                    (stripPrefix)
 import           Data.Time
 import           SeleniumUtils
+import Data.Attoparsec.Text
 import           Test.WebDriver
 import           Test.WebDriver.Commands.Wait
 import           Types.Expenses
@@ -100,16 +102,16 @@ getTripInfo tripId = do
 
 
   fareBreakdown <- findElem $ ById "receipt-frame"
-  focusFrame $ WithElement fareBreakdown
-  currencies    <- findElems $ ByXPath "//*[contains(text(),'£')]"
-  withValues    <- forM currencies $ \e -> (e,) <$> getText e
-  let currencyParseFail t = unexpected $ "Could not parse currency: \"" <> unpack t <> "\"" :: WD a
-      tryParseCurrency t  = maybe (currencyParseFail t) return $ parseGBP t
-  penceValues   <- forM withValues $ \(e,v) -> (e,) <$> tryParseCurrency v
 
-  (fareEle, farePence) <- case maximumMay $ sortOn snd penceValues of
+  -- iframes - yay
+  focusFrame $ WithElement fareBreakdown
+
+  currenciesElems <- findElems $ ByXPath "//*[contains(text(),'£')]"
+  currencies      <- forM currenciesElems $ \e -> (e,) <$> (expectGBP =<< getText e)
+
+  (fareEle, farePence) <- case maximumMay $ sortOn snd currencies of
     Just a  -> return a
-    Nothing -> unexpected $ "Could not find max value from " <> show penceValues 
+    Nothing -> unexpected $ "Could not find max value from " <> show currencies 
 
   let trip = UberTrip { uberTripId     = tripId
                       , uberScreenshot = croppedBytes
@@ -123,6 +125,12 @@ getTripInfo tripId = do
 
   putText $ show trip
   return trip
+
+  where
+  currencyParseFail t = unexpected $ "Could not parse currency: \"" <> unpack t <> "\"" :: WD a
+  expectGBP v = case parseOnly parseGBP v of
+    Left err -> unexpected $ "Could not parse value " <> show v <> ": " <> err
+    Right c  -> return c
 
 
 arrivalTimeFromStart :: UTCTime -> TimeOfDay -> UTCTime

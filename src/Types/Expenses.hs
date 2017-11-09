@@ -1,11 +1,15 @@
 module Types.Expenses
-  ( BankCard
+  ( module Reexported
+
+  , BankCard
   , CardType (..)
   , makeCard
   , parseGBP
   ) where
 
 import           Uberlude
+import Data.Attoparsec.Text
+import Types.Expenses.Currency as Reexported
 
 data BankCard = Card CardType Int
   deriving (Eq, Show)
@@ -19,5 +23,5 @@ makeCard cardType last4Digits
   | last4Digits > 9999 = Nothing
   | otherwise          = Just $ Card cardType last4Digits
 
-parseGBP :: Text -> Maybe Int
+parseGBP :: Parser Currency
 parseGBP = undefined

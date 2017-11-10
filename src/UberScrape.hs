@@ -126,6 +126,7 @@ getTripInfo tripId = do
                       , uberEndLoc     = toText
                       , uberCost       = fare
                       , uberCard       = card
+                      , uberProfile    = profile
                       }
   putText $ show trip
   return trip

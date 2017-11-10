@@ -52,7 +52,7 @@ main = hspec $ do
 
   describe "Parse some monies" $ mapM_ runCurrencyTest
     [ CurrencyParses "£3.33"
-    , CurrencyParses "£3"   
+    , CurrencyParses "£3"
     , CurrencyParses "£0"
 
     , CurrencyParseFails "abc"

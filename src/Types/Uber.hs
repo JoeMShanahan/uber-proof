@@ -39,6 +39,7 @@ data UberTrip = UberTrip
   , uberEndLoc     :: Text
   , uberCost       :: Currency
   , uberCard       :: BankCard
+  , uberProfile    :: Text
   } deriving (Eq, Show)
 
 newtype TripId = TripId UUID

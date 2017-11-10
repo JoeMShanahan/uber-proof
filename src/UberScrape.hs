@@ -16,10 +16,10 @@ module UberScrape
 import           Data.Aeson                   (Value)
 import qualified Data.ByteString.Lazy         as BSL
 import qualified Data.HashSet                 as HS
-import           Data.Text                    (stripPrefix)
+import           Data.Text                    (stripPrefix, lines, isInfixOf)
 import           Data.Time
 import           SeleniumUtils
-import Data.Attoparsec.Text
+import Data.Attoparsec.Text hiding (take)
 import           Test.WebDriver
 import           Test.WebDriver.Commands.Wait
 import           Types.Expenses
@@ -112,9 +112,11 @@ getTripInfo tripId = do
     currency  <- expectGBP valueText
     return (e, currency)
 
-  (fareEle, farePence) <- case maximumMay $ sortOn snd currencies of
+  (fareEle, fare) <- case maximumMay $ sortOn snd currencies of
     Just a  -> return a
     Nothing -> unexpected $ "Could not find max value from " <> show currencies 
+
+  (profile, card) <- determineCard =<< findElemFrom fareEle (ByXPath "./ancestor::div")
 
   let trip = UberTrip { uberTripId     = tripId
                       , uberScreenshot = croppedBytes
@@ -122,9 +124,10 @@ getTripInfo tripId = do
                       , uberEndTime    = utcEnd
                       , uberStartLoc   = fromText
                       , uberEndLoc     = toText
-                      , uberCost       = farePence
-                      , userCard       = fromMaybe undefined $ makeCard MasterCard 9999
+                      , uberCost       = fare
+                      , uberCard       = card
                       }
+  putText $ show trip
   return trip
 
   where
@@ -132,6 +135,31 @@ getTripInfo tripId = do
     Left err -> unexpected $ "Could not parse value " <> show v <> ": " <> err
     Right c  -> return c
 
+determineCard :: Element -> WD (Text, BankCard)
+determineCard e = do
+  ts       <- lines <$> getText e
+  ccImg    <- findElemFrom e $ ByTag "img"
+  src      <- maybe noImgSrcError return =<< attr ccImg "src"
+  cardType <- maybe (cardTypeError src) return $ cardTypeFromImageName src
+  case asum $ map (parseOnly $ paymentLineParser cardType) ts of
+    Right x  -> return x
+    Left err -> unexpected $ "Could not get card info: " <> err
+  where
+  lastDigitsError ts = unexpected $ "Could not get card digits from " <> show ts
+  noImgSrcError      = unexpected $ "Could not get image src"
+  cardTypeError t    = unexpected $ "Could not determine card type from image file \"" <> unpack t <> "\""
+  cardTypeFromImageName t
+    | "payment-type-visa" `isInfixOf` t = Just Visa
+    | "payment-type-mc"   `isInfixOf` t = Just MasterCard 
+    | otherwise                         = Nothing
+  getLast4Chars = pack . reverse . take 4 . reverse . unpack
+  paymentLineParser cardType = do
+    profile <- many1 letter
+    skipSpace
+    void $ many1 $ char '•'
+    skipSpace
+    digits <- decimal
+    maybe mzero (return . (pack profile,)) $ makeCard cardType digits
 
 arrivalTimeFromStart :: UTCTime -> TimeOfDay -> UTCTime
 arrivalTimeFromStart start arriveTimeOfDay =

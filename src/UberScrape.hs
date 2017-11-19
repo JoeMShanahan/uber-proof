@@ -13,6 +13,7 @@ module UberScrape
   , yearAndMonths
   ) where
 
+import System.Console.ANSI (clearLine, cursorUp)
 import           Data.Aeson                   (Value)
 import qualified Data.ByteString.Lazy         as BSL
 import qualified Data.HashSet                 as HS
@@ -53,10 +54,18 @@ tripsInMonth y@(Year yy) m@(Month mm) = do
   openPage $ filterTripsURL y m
   putText "Looking for trip ids"
   tripIds <- traverseTableWith $ \n -> filterTripsURLWithPage n y m
-  putText $ "Found " <> show (length tripIds) <> " trip(s) for " <> show yy <> "-" <> show mm
-  putText "Retrieving trip info"
-  eTrips <- forM tripIds $ \tripId -> do
+
+  let numberedTrips = zip [0..] tripIds
+      numTrips      = length tripIds
+
+  putText $ "Found " <> show numTrips <> " trip(s) for " <> show yy <> "-" <> show mm
+  putText "Getting info on trip(s) ..."
+
+
+  eTrips <- forM numberedTrips $ \(n, tripId) -> do
+    putText $ "Progress: " <> show n <> "/" <> show numTrips
     tripAttempt <- tryWD $ getTripInfo tripId
+    liftIO $ cursorUp 1 >> clearLine
     case tripAttempt of
       Success trip -> return $ Right trip
       Failure err  -> do
@@ -64,7 +73,7 @@ tripsInMonth y@(Year yy) m@(Month mm) = do
         putText $ show err
         return $ Left $ TripRetrievalFailure tripId err
   let result = constructResult y m eTrips
-  putText $ "Result completed, successful trip retrievals: "
+  putText $ "... done, successful trip retrievals: "
          <> show (length $ tripsRetrieved result)
          <> "/"
          <> show (length tripIds)
@@ -128,7 +137,6 @@ getTripInfo tripId = do
                       , uberCard       = card
                       , uberProfile    = profile
                       }
-  putText $ show trip
   return trip
 
   where

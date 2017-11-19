@@ -26,6 +26,7 @@ library
                        Uberlude
   build-depends:       base
                      , aeson
+                     , ansi-terminal
                      , attoparsec
                      , lifted-base
                      , friday

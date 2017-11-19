@@ -180,10 +180,10 @@ takeTripScreenshot = do
   (eleX, eleY)          <- elemPos tripDetails
   (eleWidth, eleHeight) <- elemSize tripDetails
 
-  let rect = Rect { rX = eleX
-                  , rY = eleY
-                  , rWidth  = fromIntegral eleWidth
-                  , rHeight = fromIntegral eleHeight
+  let rect = Rect { rX = floor eleX
+                  , rY = floor eleY
+                  , rWidth  = ceiling eleWidth
+                  , rHeight = ceiling eleHeight
                   }
 
   image <- case loadBS Autodetect $ BSL.toStrict screenshotBytes of

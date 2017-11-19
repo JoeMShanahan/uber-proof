@@ -5,6 +5,10 @@ packages:
     git: https://github.com/RaphaelJ/friday-devil.git
     commit: 73181586307a4db93302bfeb9af9ded615e60a07
   extra-dep: true
+- location:
+    git: https://github.com/tracsis/hs-webdriver.git
+    commit: d5e274859d3cf27ed498b0ae779107885aa28069
+  extra-dep: true
 extra-deps:
 - friday-0.2.3.1
 - ratio-int-0.1.2

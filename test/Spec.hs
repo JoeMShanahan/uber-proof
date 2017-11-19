@@ -58,10 +58,12 @@ main = hspec $ do
     , CurrencyParseFails "abc"
     , CurrencyParseFails "$20"
     , CurrencyParseFails "£1.102"
+    , CurrencyParseFails "£1,10"
+    , CurrencyParseFails "£1m"
 
-    , CurrencyDisplayAs "£3.33" "£3.33"
-    , CurrencyDisplayAs "£3"    "£3.00"
-    , CurrencyDisplayAs "£0"    "£0.00"
+    , CurrencyDisplayAs "£3.33" "3.33"
+    , CurrencyDisplayAs "£3"    "3.00"
+    , CurrencyDisplayAs "£0"    "0.00"
     ]
 
 data CurrencyTest
@@ -78,12 +80,13 @@ runCurrencyTest test = case test of
 
   CurrencyParseFails input ->
     it (unpack $ "Parse of \"" <> input <> "\" fails") $ case doParse input of
-      Right _ -> expectationFailure "Parse succeeded"
-      Left _  -> return ()
+      Right curr -> expectationFailure $ unpack $ 
+        "Parse succeeded: " <> displayCurrencyValue curr
+      Left _     -> return ()
 
   CurrencyDisplayAs input output ->
     it (unpack $ "Parse of \"" <> input <> "\" displays as \"" <> output <> "\"") $ case doParse input of 
-      Right curr -> displayCurrency curr `shouldBe` output
+      Right curr -> displayCurrencyValue curr `shouldBe` output
       Left err   -> expectationFailure $ "Parse failed: " <> err
   where
   doParse = parseOnly parseGBP

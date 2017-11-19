@@ -27,8 +27,14 @@ parseGBP :: Parser Currency
 parseGBP = do
   void $ char '£'
   poundsNum <- decimal
-  penceNum <- AP.option 0 $ char '.' >> decimal
+  penceNum <- endInputPence <|> getNonZeroPence
   GBP (Pounds poundsNum) <$> parsePence penceNum
   where
-  parsePence = maybe mzero return . makePence
+  parsePence    = maybe mzero return . makePence
+  endInputPence = do
+    mChar <- peekChar
+    case mChar of
+     Nothing -> return 0
+     Just c  -> fail $ "Expected end, found " <> [c]
+  getNonZeroPence = char '.' >> decimal
 

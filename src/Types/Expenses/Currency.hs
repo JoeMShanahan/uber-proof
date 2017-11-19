@@ -4,7 +4,7 @@ module Types.Expenses.Currency
   , Pence
 
   , makePence
-  , displayCurrency
+  , displayCurrencyValue
   ) where
 
 import Uberlude
@@ -21,9 +21,9 @@ makePence n
   | n > 99    = Nothing
   | otherwise = Just $ Pence n
 
-displayCurrency :: Currency -> Text
-displayCurrency (GBP (Pounds pounds) (Pence pence)) = 
-  "£" <> show pounds <> "." <> pencePad
+displayCurrencyValue :: Currency -> Text
+displayCurrencyValue (GBP (Pounds pounds) (Pence pence)) = 
+  show pounds <> "." <> pencePad
   where
   penceStr = show pence
   pencePad

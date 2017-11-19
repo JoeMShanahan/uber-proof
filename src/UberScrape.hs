@@ -13,14 +13,14 @@ module UberScrape
   , yearAndMonths
   ) where
 
-import System.Console.ANSI (clearLine, cursorUp)
 import           Data.Aeson                   (Value)
+import           Data.Attoparsec.Text         hiding (take)
 import qualified Data.ByteString.Lazy         as BSL
 import qualified Data.HashSet                 as HS
-import           Data.Text                    (stripPrefix, lines, isInfixOf)
+import           Data.Text                    (isInfixOf, lines, stripPrefix)
 import           Data.Time
 import           SeleniumUtils
-import Data.Attoparsec.Text hiding (take)
+import           System.Console.ANSI          (clearLine, cursorUp)
 import           Test.WebDriver
 import           Test.WebDriver.Commands.Wait
 import           Types.Expenses
@@ -62,7 +62,7 @@ tripsInMonth y@(Year yy) m@(Month mm) = do
   putText "Getting info on trip(s) ..."
 
 
-  eTrips <- forM numberedTrips $ \(n, tripId) -> do
+  eTrips <- forM numberedTrips $ \(n :: Int, tripId) -> do
     putText $ "Progress: " <> show n <> "/" <> show numTrips
     tripAttempt <- tryWD $ getTripInfo tripId
     liftIO $ cursorUp 1 >> clearLine
@@ -90,7 +90,7 @@ getTripInfo tripId = do
 
   croppedBytes <- takeTripScreenshot
 
-  timeZone <- liftIO getCurrentTimeZone 
+  timeZone <- liftIO getCurrentTimeZone
 
   titleEle      <- findElem $ ByClass "page-lead"
   tripStartText <- getText =<< findElemFrom titleEle (ByTag "div")
@@ -123,7 +123,7 @@ getTripInfo tripId = do
 
   (fareEle, fare) <- case maximumMay $ sortOn snd currencies of
     Just a  -> return a
-    Nothing -> unexpected $ "Could not find max value from " <> show currencies 
+    Nothing -> unexpected $ "Could not find max value from " <> show currencies
 
   (profile, card) <- determineCard =<< findElemFrom fareEle (ByXPath "./ancestor::div")
 
@@ -154,14 +154,12 @@ determineCard e = do
     Right x  -> return x
     Left err -> unexpected $ "Could not get card info: " <> err
   where
-  lastDigitsError ts = unexpected $ "Could not get card digits from " <> show ts
   noImgSrcError      = unexpected $ "Could not get image src"
   cardTypeError t    = unexpected $ "Could not determine card type from image file \"" <> unpack t <> "\""
   cardTypeFromImageName t
     | "payment-type-visa" `isInfixOf` t = Just Visa
-    | "payment-type-mc"   `isInfixOf` t = Just MasterCard 
+    | "payment-type-mc"   `isInfixOf` t = Just MasterCard
     | otherwise                         = Nothing
-  getLast4Chars = pack . reverse . take 4 . reverse . unpack
   paymentLineParser cardType = do
     profile <- many1 letter
     skipSpace

@@ -18,8 +18,7 @@ module SeleniumUtils
 import           Control.Concurrent.Async.Lifted
 import           Data.Text                       (toLower)
 import           Test.WebDriver
-import           Test.WebDriver.Commands.Wait    (onTimeout, unexpected,
-                                                  waitUntil, waitUntil')
+import           Test.WebDriver.Commands.Wait    (unexpected, waitUntil')
 import           Uberlude                        hiding (withAsync)
 
 containsTextSelector :: Text -> Selector

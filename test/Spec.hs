@@ -1,11 +1,11 @@
+import           Data.Attoparsec.Text
 import           Data.Time
 import           Options
 import           Test.Hspec
-import           Types.Uber
 import           Types.Expenses
+import           Types.Uber
 import           Uberlude
 import           UberScrape
-import Data.Attoparsec.Text
 
 main :: IO ()
 main = hspec $ do
@@ -80,12 +80,12 @@ runCurrencyTest test = case test of
 
   CurrencyParseFails input ->
     it (unpack $ "Parse of \"" <> input <> "\" fails") $ case doParse input of
-      Right curr -> expectationFailure $ unpack $ 
+      Right curr -> expectationFailure $ unpack $
         "Parse succeeded: " <> displayCurrencyValue curr
       Left _     -> return ()
 
   CurrencyDisplayAs input output ->
-    it (unpack $ "Parse of \"" <> input <> "\" displays as \"" <> output <> "\"") $ case doParse input of 
+    it (unpack $ "Parse of \"" <> input <> "\" displays as \"" <> output <> "\"") $ case doParse input of
       Right curr -> displayCurrencyValue curr `shouldBe` output
       Left err   -> expectationFailure $ "Parse failed: " <> err
   where

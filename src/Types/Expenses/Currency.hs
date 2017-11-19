@@ -7,8 +7,8 @@ module Types.Expenses.Currency
   , displayCurrencyValue
   ) where
 
-import Uberlude
-import Data.Text as T
+import           Data.Text as T
+import           Uberlude
 data Currency = GBP Pounds Pence
   deriving (Eq, Show, Ord)
 
@@ -22,7 +22,7 @@ makePence n
   | otherwise = Just $ Pence n
 
 displayCurrencyValue :: Currency -> Text
-displayCurrencyValue (GBP (Pounds pounds) (Pence pence)) = 
+displayCurrencyValue (GBP (Pounds pounds) (Pence pence)) =
   show pounds <> "." <> pencePad
   where
   penceStr = show pence

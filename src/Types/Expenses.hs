@@ -7,9 +7,9 @@ module Types.Expenses
   , parseGBP
   ) where
 
+import           Data.Attoparsec.Text    as AP
+import           Types.Expenses.Currency as Reexported
 import           Uberlude
-import Data.Attoparsec.Text as AP
-import Types.Expenses.Currency as Reexported
 
 data BankCard = Card CardType Int
   deriving (Eq, Show)

@@ -8,6 +8,7 @@ module UberScrape
   -- * Output
   , TripScrapeResult (..)
   , TripRetrievalFailure (..)
+  , describeFailure
 
   -- * For tests
   , yearAndMonths
@@ -40,6 +41,10 @@ data TripScrapeResult = TripScrapeResult
 
 data TripRetrievalFailure = TripRetrievalFailure TripId SomeException
   deriving (Show)
+
+describeFailure :: TripRetrievalFailure -> Text
+describeFailure (TripRetrievalFailure tripId exceptionThrown) =
+  "Trip " <> tripIdText tripId <> " failed: " <> show exceptionThrown 
 
 getTrips :: Day -> Day -> String -> Maybe Int -> Username -> Password -> IO [TripScrapeResult]
 getTrips start end host port user pwd = runSession (chromeConfig host port) $ do

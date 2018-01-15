@@ -52,7 +52,7 @@ tripIdToString :: TripId -> String
 tripIdToString (TripId uuid) = toString uuid
 
 tripIdText :: TripId -> Text
-tripIdText = pack . tripIdToString
+tripIdText (TripId uuid) = toText uuid
 
 parseUberTime :: Text -> Either String LocalTime
 parseUberTime = asum . zipWith tryParse formats . repeat . unpack

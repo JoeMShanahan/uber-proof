@@ -3,6 +3,8 @@ module Main where
 import           Options
 import           Uberlude
 import           UberScrape
+import Types.Uber
+import qualified Data.ByteString as BS
 
 main :: IO ()
 main = withOptions $ \opt -> do
@@ -14,4 +16,13 @@ main = withOptions $ \opt -> do
       end       = optEnd opt
 
   result <- getTrips start end host port user password
-  forM_ result $ \r -> forM_ (tripsFailed r) $ putText . show
+
+  reportFailures $ concatMap tripsFailed result
+  processTrips $ concatMap tripsRetrieved result
+
+reportFailures :: [TripRetrievalFailure] -> IO ()
+reportFailures = mapM_ $ putText . describeFailure
+    
+processTrips :: [UberTrip] -> IO ()
+processTrips = mapM_ $ \trip ->
+  BS.writeFile (show (uberTripId trip) <> ".png") (uberScreenshot trip)

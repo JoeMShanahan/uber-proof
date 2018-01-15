@@ -3,7 +3,8 @@ module Main where
 import           Options
 import           Uberlude
 import           UberScrape
-import Types.Uber
+import           Types.Expenses.Currency
+import           Types.Uber
 import qualified Data.ByteString as BS
 
 main :: IO ()
@@ -24,5 +25,6 @@ reportFailures :: [TripRetrievalFailure] -> IO ()
 reportFailures = mapM_ $ putText . describeFailure
     
 processTrips :: [UberTrip] -> IO ()
-processTrips = mapM_ $ \trip ->
-  BS.writeFile (show (uberTripId trip) <> ".png") (uberScreenshot trip)
+processTrips trips = do
+  forM_ trips $ \trip -> BS.writeFile (show (uberTripId trip) <> ".png") (uberScreenshot trip)
+  putText $ displayCurrencyValue $ mconcat $ map uberCost trips

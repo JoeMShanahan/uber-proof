@@ -50,10 +50,11 @@ main = hspec $ do
     forM_ examples $ \s -> it ("Parses \"" <> s <> "\"") $ unless (isRight $ parseUberTime $ pack s) $
       expectationFailure $ s <> " - did not parse"
 
-  describe "Parse some monies" $ mapM_ runCurrencyTest
+  describe "Currency tests" $ mapM_ runCurrencyTest
     [ CurrencyParses "£3.33"
     , CurrencyParses "£3"
     , CurrencyParses "£0"
+    , CurrencyParses "£0.00"
 
     , CurrencyParseFails "abc"
     , CurrencyParseFails "$20"
@@ -64,12 +65,22 @@ main = hspec $ do
     , CurrencyDisplayAs "£3.33" "3.33"
     , CurrencyDisplayAs "£3"    "3.00"
     , CurrencyDisplayAs "£0"    "0.00"
+
+    , AddCurencies "£0.50"   "£0.50"    "1.00"
+    , AddCurencies "£0.00"   "£0.50"    "0.50"
+    , AddCurencies "£0.00"   "£0.00"    "0.00"
+    , AddCurencies "£0.99"   "£0.99"    "1.98"
+    , AddCurencies "£1.00"   "£1.99"    "2.99"
+    , AddCurencies "£1.00"   "£2.01"    "3.01"
+    , AddCurencies "£100.70" "£1000.31" "1101.01"
     ]
+
 
 data CurrencyTest
   = CurrencyParses Text
   | CurrencyParseFails Text
   | CurrencyDisplayAs Text Text
+  | AddCurencies Text Text Text
 
 runCurrencyTest :: CurrencyTest -> SpecWith ()
 runCurrencyTest test = case test of
@@ -88,5 +99,13 @@ runCurrencyTest test = case test of
     it (unpack $ "Parse of \"" <> input <> "\" displays as \"" <> output <> "\"") $ case doParse input of
       Right curr -> displayCurrencyValue curr `shouldBe` output
       Left err   -> expectationFailure $ "Parse failed: " <> err
+
+  AddCurencies in1 in2 output ->
+    it (unpack $ "Can combine " <> in1 <> " and " <> in2) $
+      either (\err -> expectationFailure $ "Parse failed: " <> err) identity $ do
+        i1 <- doParse in1
+        i2 <- doParse in2
+        let total = i1 <> i2
+        pure $ displayCurrencyValue total `shouldBe` output
   where
   doParse = parseOnly parseGBP

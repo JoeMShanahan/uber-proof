@@ -35,16 +35,27 @@ reportFailures = mapM_ $ putText . describeFailure
 processResults :: [TripScrapeResult] -> IO ()
 processResults results = do
   tripdir <- tripDirectory
-  forM_ results $ \result -> 
-    forM_ (tripsRetrieved result) $ \trip -> do
-      let fullDir =  concat $ intersperse "/"
+  forM_ results $ \result -> do
+
+    let yearText  = show $ unYear $ tripYear result
+        monthText = padWith0 $ show $ unMonth $ tripMonth result
+        csvDir    = concat $ intersperse "/" [tripdir, "csvs"]
+        trips     = tripsRetrieved result
+
+    createDirectoryIfMissing True csvDir
+
+    let csvFilename = csvDir <> "/" <> yearText <> "-" <> monthText <> ".csv"
+    BS.writeFile csvFilename $ makeCSVBytes trips
+
+    forM_ trips $ \trip -> do
+      let imageDir = concat $ intersperse "/"
             [ tripdir
             , "receipt_images"
-            , show $ unYear $ tripYear result
-            , padWith0 $ show $ unMonth $ tripMonth result
+            , yearText
+            , monthText
             ]
-          tripPath t = fullDir <> "/" <> tripFileName t <> ".png"
-      createDirectoryIfMissing True fullDir     
+          tripPath t = imageDir <> "/" <> tripFileName t <> ".png"
+      createDirectoryIfMissing True imageDir     
       BS.writeFile (tripPath trip) (uberScreenshot trip)
   where
   padWith0 c@[_] = '0':c

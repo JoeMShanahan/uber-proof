@@ -27,8 +27,8 @@ import           Uberlude
 newtype Username = Username Text
 newtype Password = Password Text
 
-newtype Month = Month Int     deriving (Eq, Show)
-newtype Year  = Year  Integer deriving (Eq, Show)
+newtype Month = Month { unMonth :: Int     } deriving (Eq, Show)
+newtype Year  = Year  { unYear  :: Integer } deriving (Eq, Show)
 
 data UberTrip = UberTrip
   { uberTripId     :: TripId

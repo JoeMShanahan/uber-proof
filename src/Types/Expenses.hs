@@ -1,7 +1,11 @@
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 module Types.Expenses
   ( module Reexported
 
   , BankCard
+  , cardText
   , CardType (..)
   , makeCard
   , parseGBP
@@ -16,6 +20,14 @@ data BankCard = Card CardType Int
 
 data CardType = Visa | MasterCard
   deriving (Eq, Show)
+
+cardText :: BankCard -> Text
+cardText (Card cardType num) =
+  typeToText cardType <> "-" <> show num
+  where
+  typeToText = \case
+    Visa       -> "visa"
+    MasterCard -> "mc"
 
 makeCard :: CardType -> Int -> Maybe BankCard
 makeCard cardType last4Digits

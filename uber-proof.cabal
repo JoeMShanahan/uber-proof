@@ -53,12 +53,13 @@ executable uber-proof
   ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N
   other-modules:       
   build-depends:       base
-                     , directory
-                     , uber-proof
-                     , network-uri
-                     , time
-                     , unordered-containers
                      , bytestring
+                     , directory
+                     , network-uri
+                     , text
+                     , time
+                     , uber-proof
+                     , unordered-containers
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings, NoImplicitPrelude
 

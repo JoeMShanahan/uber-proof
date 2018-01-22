@@ -1,5 +1,5 @@
-{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Main where
 
@@ -12,6 +12,8 @@ import Data.Time
 import System.Directory
 import qualified Data.HashMap.Strict as HM
 import Data.Char
+import qualified Data.Text as T
+import Types.Expenses
 
 main :: IO ()
 main = withOptions $ \opt -> do
@@ -78,3 +80,49 @@ characterConversion = HM.fromList $
   where
   numChars = concatMap (unpack . show) [0 .. 9 :: Int]
   lowers   = ['a'..'z']
+
+convertTripToCSV :: UberTrip -> TripCSV
+convertTripToCSV UberTrip{..} = TripCSV
+  { textTime  = timeText uberStartTime
+  , textStart = uberStartLoc
+  , textEnd   = uberEndLoc
+  , textId    = tripIdText uberTripId
+  , textCard  = cardText uberCard
+  , textCost  = displayCurrencyValue uberCost
+  }
+  where
+  timeText = pack . formatTime defaultTimeLocale excelTimeFormat
+  excelTimeFormat = "%Y-%m-%d %H:%M:%S"
+
+tripCSVHeader :: Text
+tripCSVHeader = "start time,start location,end location,id,card,cost"
+
+data TripCSV = TripCSV
+  { textTime  :: Text
+  , textStart :: Text
+  , textEnd   :: Text
+  , textId    :: Text
+  , textCard  :: Text
+  , textCost  :: Text
+  } deriving (Eq, Show)
+
+tripCSVLine :: TripCSV -> Text
+tripCSVLine TripCSV{..} = mconcat $ intersperse "," $ map forceValid
+  [ textTime 
+  , textStart
+  , textEnd  
+  , textId   
+  , textCard 
+  , textCost
+  ]
+  where
+  forceValid = pack . trim . unpack . removeCommas
+  removeCommas = T.replace "," " "
+  trim (' ':cs) = ' ' : trim (dropWhile (== ' ') cs)
+  trim (  c:cs) = c   : trim cs
+  trim      []  = []
+
+makeCSVBytes :: [UberTrip] -> ByteString
+makeCSVBytes trips = encodeUtf8 $ T.unlines csvLines
+  where
+  csvLines = tripCSVHeader : map (tripCSVLine . convertTripToCSV) trips

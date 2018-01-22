@@ -186,15 +186,28 @@ takeTripScreenshot = do
   -- Get rid of the trip bar buttons
   void (executeJS [] deleteTripBarJS :: WD Value)
 
-  screenshotBytes       <- screenshot
-  tripDetails           <- findElem $ ByClass tripDetailsDivClass
-  (eleX, eleY)          <- elemPos tripDetails
-  (eleWidth, eleHeight) <- elemSize tripDetails
+  screenshotBytes          <- screenshot
+  tripDetails              <- findElem $ ByClass tripDetailsDivClass
+
+  header                   <- findElemFrom tripDetails $ ByClass tripDetailsHeaderClass
+  breakdown                <- findElemFrom tripDetails $ ByClass tripDetailsBreakdownClass
+
+  (breakdownX, breakdownY) <- elemPos breakdown
+  (headerX, headerY)       <- elemPos header
+
+  let eleX = min headerX breakdownX
+      eleY = min headerY breakdownY
+
+  (breakdownWidth, breakdownHeight) <- elemSize breakdown
+  (headerWidth, _)                  <- elemSize header
+
+  let eleW = max headerWidth breakdownWidth
+      eleH = breakdownHeight + abs (headerY - breakdownY)
 
   let rect = Rect { rX = floor eleX
                   , rY = floor eleY
-                  , rWidth  = ceiling eleWidth
-                  , rHeight = ceiling eleHeight
+                  , rWidth  = ceiling eleW
+                  , rHeight = ceiling eleH
                   }
 
   image <- case loadBS Autodetect $ BSL.toStrict screenshotBytes of
@@ -213,9 +226,12 @@ traverseTableWith mkUrl = go 1
   go n = do
     openPage $ mkUrl n
     ids <- getTripIdsFromTable
-    case ids of
-      [] -> return ids
-      _  -> (ids <>) <$> go (n + 1)
+    case ids of 
+      a:_ -> pure [a]
+      []  -> pure []
+    -- case ids of
+    --   [] -> return ids
+    --   _  -> (ids <>) <$> go (n + 1)
 
 getTripIdsFromTable :: WD [TripId]
 getTripIdsFromTable = do
@@ -313,6 +329,12 @@ tripActionBarId = "trip-details__actions"
 
 tripDetailsDivClass :: Text
 tripDetailsDivClass = "page-content"
+
+tripDetailsHeaderClass :: Text
+tripDetailsHeaderClass = "page-lead"
+
+tripDetailsBreakdownClass :: Text
+tripDetailsBreakdownClass = "trip-details__breakdown"
 
 -- | Ugh!
 deleteTripBarJS :: Text

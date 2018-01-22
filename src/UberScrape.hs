@@ -226,12 +226,9 @@ traverseTableWith mkUrl = go 1
   go n = do
     openPage $ mkUrl n
     ids <- getTripIdsFromTable
-    case ids of 
-      a:_ -> pure [a]
-      []  -> pure []
-    -- case ids of
-    --   [] -> return ids
-    --   _  -> (ids <>) <$> go (n + 1)
+    case ids of
+      [] -> return ids
+      _  -> (ids <>) <$> go (n + 1)
 
 getTripIdsFromTable :: WD [TripId]
 getTripIdsFromTable = do

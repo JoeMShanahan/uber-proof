@@ -45,7 +45,7 @@ processResults results = do
     createDirectoryIfMissing True csvDir
 
     let csvFilename = csvDir <> "/" <> yearText <> "-" <> monthText <> ".csv"
-    BS.writeFile csvFilename $ makeCSVBytes trips
+    BS.writeFile csvFilename $ makeCSVBytes $ sortBy (comparing uberStartTime) trips
 
     forM_ trips $ \trip -> do
       let imageDir = concat $ intersperse "/"

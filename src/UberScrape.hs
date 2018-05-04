@@ -67,7 +67,6 @@ tripsInMonth y@(Year yy) m@(Month mm) = do
   putText $ "Found " <> show numTrips <> " trip(s) for " <> show yy <> "-" <> show mm
   putText "Getting info on trip(s) ..."
 
-
   eTrips <- forM numberedTrips $ \(n :: Int, tripId) -> do
     putText $ "Progress: " <> show n <> "/" <> show numTrips
     tripAttempt <- tryWD $ getTripInfo tripId
@@ -262,12 +261,12 @@ performUberLogin (Username user) (Password pwd) = do
 
   where
   loginProcedure = do
-    patiently $ enterInput user userInputId "Next"
-    patiently $ enterInput pwd passwordInputId "Next"
+    indefinitely $ enterInput user userInputId "Next"
+    indefinitely $ enterInput pwd passwordInputId "Next"
     let badPwd = do
           e <- findElem $ containsTextSelector "entered is incorrect"
           unlessM (isDisplayed e) $ unexpected "Bad password text exists but not visible"
-    patiently (tryEither badPwd loginSuccess) >>= \case
+    indefinitely (tryEither badPwd loginSuccess) >>= \case
       Left _  -> fail "Bad password"
       Right _ -> return ()
 

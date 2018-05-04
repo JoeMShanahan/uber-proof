@@ -5,6 +5,7 @@ module SeleniumUtils
     containsTextSelector
 
   -- * Helpers
+  , indefinitely
   , patiently
 
   -- * Graceful failure
@@ -34,16 +35,22 @@ containsTextSelector t = ByXPath $
   lowers = toLower uppers
   uppers = pack ['A'..'Z']
 
+indefinitely :: WD a -> WD a
+indefinitely = waitWhilstDoing 10e9 
+
 patiently :: WD a -> WD a
-patiently go = waitUntil' 0 waitTime catchEmAll
+patiently = waitWhilstDoing defaultWaitTime
+
+defaultWaitTime :: Double
+defaultWaitTime = 60
+
+waitWhilstDoing :: Double -> WD a -> WD a
+waitWhilstDoing waitTime go = waitUntil' 0 waitTime catchEmAll
   where
   -- | I freely admit this is shameful, but this function is supposed to keep trying no matter what.
   catchEmAll = go `catch` superBadCatcher
   superBadCatcher :: SomeException -> WD a
   superBadCatcher e = unexpected $ "I failed: " <> show e
-
-waitTime :: Double
-waitTime = 60
 
 data WDResult a = Success a | Failure SomeException
   deriving (Show)
@@ -53,7 +60,7 @@ maybeWDResult (Success a) = Just a
 maybeWDResult (Failure _) = Nothing
 
 tryWD :: WD a -> WD (WDResult a)
-tryWD go = (go >>= return . Success) `catch` (return . Failure)
+tryWD go = (Success <$> go) `catch` (return . Failure)
 
 tryEither :: WD a -> WD b -> WD (Either a b)
 tryEither getA getB = do

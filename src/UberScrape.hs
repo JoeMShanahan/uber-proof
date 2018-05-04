@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections       #-}
 
@@ -15,7 +16,7 @@ module UberScrape
   ) where
 
 import           Data.Aeson                   (Value)
-import           Data.Attoparsec.Text         hiding (take)
+import           Data.Attoparsec.Text
 import qualified Data.ByteString.Lazy         as BSL
 import qualified Data.HashSet                 as HS
 import           Data.Text                    (isInfixOf, lines, stripPrefix)
@@ -159,7 +160,7 @@ determineCard e = do
     Right x  -> return x
     Left err -> unexpected $ "Could not get card info: " <> err
   where
-  noImgSrcError      = unexpected $ "Could not get image src"
+  noImgSrcError      = unexpected "Could not get image src"
   cardTypeError t    = unexpected $ "Could not determine card type from image file \"" <> unpack t <> "\""
   cardTypeFromImageName t
     | "payment-type-visa" `isInfixOf` t = Just Visa
@@ -235,7 +236,7 @@ getTripIdsFromTable = do
   table     <- findElem $ ById "trips-table"
   tableBody <- findElemFrom table $ ByTag "tbody"
   rows      <- findElemsFrom tableBody $ ByCSS "tr.trip-expand__origin"
-  idValues  <- mapM (\e -> attr e "data-target") rows
+  idValues  <- mapM (`attr` "data-target") rows
 
   let tripIds = mapMaybe getTripId $ catMaybes idValues
 
@@ -266,7 +267,7 @@ performUberLogin (Username user) (Password pwd) = do
     let badPwd = do
           e <- findElem $ containsTextSelector "entered is incorrect"
           unlessM (isDisplayed e) $ unexpected "Bad password text exists but not visible"
-    patiently (tryEither badPwd loginSuccess) >>= \r -> case r of
+    patiently (tryEither badPwd loginSuccess) >>= \case
       Left _  -> fail "Bad password"
       Right _ -> return ()
 
@@ -286,7 +287,6 @@ performUberLogin (Username user) (Password pwd) = do
 
 loginSuccess :: WD ()
 loginSuccess = void $ findElem $ containsTextSelector "MY TRIPS"
-
 
 yearAndMonths :: Day -> Day -> [(Year, Month)]
 yearAndMonths start end
